@@ -12,51 +12,155 @@
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased">
   <div class="min-h-screen lg:flex">
-    <aside class="w-full lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 p-5 lg:min-h-screen">
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center"><i data-lucide="landmark"></i></div>
-        <div><div class="font-semibold">LedgerPoint CPA</div><div class="text-xs text-slate-400">Back-Office Portal</div></div>
+    <!-- SIDEBAR -->
+    <aside class="w-full lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 p-5 lg:min-h-screen flex flex-col justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center"><i data-lucide="landmark"></i></div>
+          <div><div class="font-semibold">CPA Back-Office</div><div class="text-xs text-slate-400">Enterprise Edition</div></div>
+        </div>
+        <nav class="grid sm:grid-cols-2 lg:grid-cols-1 gap-2 text-sm">
+          <a onclick="switchTab('dashboard')" id="nav-dashboard" class="flex gap-3 items-center rounded-lg bg-slate-800 px-3 py-2.5 text-white cursor-pointer transition"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>Dashboard</a>
+          <a onclick="switchTab('clients')" id="nav-clients" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="building-2" class="w-4 h-4"></i>Clients</a>
+          <a onclick="switchTab('filings')" id="nav-filings" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="file-check-2" class="w-4 h-4"></i>Filings</a>
+          <a onclick="switchTab('audit')" id="nav-audit" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="scan-search" class="w-4 h-4"></i>Audit Center</a>
+        </nav>
       </div>
-      <nav class="grid sm:grid-cols-2 lg:grid-cols-1 gap-2 text-sm">
-        <a class="flex gap-3 items-center rounded-lg bg-slate-800 px-3 py-2.5 text-white" href="#"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>Dashboard</a>
-        <a class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white" href="#"><i data-lucide="building-2" class="w-4 h-4"></i>Clients</a>
-        <a class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white" href="#"><i data-lucide="file-check-2" class="w-4 h-4"></i>Filings</a>
-        <a class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white" href="#"><i data-lucide="scan-search" class="w-4 h-4"></i>Audit Center</a>
-      </nav>
+      <div class="pt-4 border-t border-slate-800 text-xs text-slate-500">
+        <p class="font-medium text-slate-300">Mahmoud J. Alramahi</p>
+        <p class="text-[10px]">Lead FP&A Architect</p>
+      </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="flex-1 min-w-0">
       <header class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-5 sm:px-8 py-4 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <div><p class="text-xs uppercase tracking-widest text-slate-500">Active period</p><h1 class="text-xl font-semibold">October 2026 Q3 Close</h1></div>
-        <button onclick="alert('Client onboarding workflow would open here.')" class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2.5"><i data-lucide="user-plus" class="w-4 h-4"></i>Onboard New Client</button>
+        <button onclick="openOnboardModal()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2.5 transition shadow-lg shadow-emerald-500/20"><i data-lucide="user-plus" class="w-4 h-4"></i>Onboard New Client</button>
       </header>
 
       <section class="p-5 sm:p-8 max-w-7xl mx-auto">
-        <div class="mb-6"><h2 class="text-2xl font-semibold">Executive overview</h2><p class="text-slate-400 mt-1">Client readiness, revenue, filing deadlines, and audit exceptions.</p></div>
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Wholesale Clients</span><i data-lucide="users" class="w-5 h-5 text-sky-400"></i></div><div class="text-3xl font-bold mt-4">42<span class="text-base font-normal text-slate-500">/100</span></div><div class="mt-3 h-1.5 bg-slate-800 rounded-full"><div class="h-full w-[42%] bg-sky-500 rounded-full"></div></div></div>
-          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Monthly Recurring Revenue</span><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-emerald-400"></i></div><div class="text-3xl font-bold mt-4">$5,250</div><p class="text-xs text-slate-500 mt-3">Current monthly book</p></div>
-          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Pending Filing Deadlines</span><i data-lucide="calendar-clock" class="w-5 h-5 text-amber-400"></i></div><div class="text-base font-semibold mt-4">CT Town Personal Property</div><p class="text-sm text-amber-300 mt-2">Due Nov 1</p></div>
-          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Audit Exceptions</span><i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400"></i></div><div class="text-3xl font-bold mt-4">3</div><p class="text-xs text-slate-500 mt-3">Items requiring review</p></div>
-        </div>
+        <!-- VIEW CONTAINER -->
+        <div id="view-dashboard">
+          <div class="mb-6"><h2 class="text-2xl font-semibold">Executive overview</h2><p class="text-slate-400 mt-1">Client readiness, revenue, filing deadlines, and audit exceptions.</p></div>
+          
+          <!-- KPIS -->
+          <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Wholesale Clients</span><i data-lucide="users" class="w-5 h-5 text-sky-400"></i></div><div class="text-3xl font-bold mt-4">42<span class="text-base font-normal text-slate-500">/100</span></div><div class="mt-3 h-1.5 bg-slate-800 rounded-full"><div class="h-full w-[42%] bg-sky-500 rounded-full"></div></div></div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Monthly Recurring Revenue</span><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-emerald-400"></i></div><div class="text-3xl font-bold mt-4">$5,250</div><p class="text-xs text-slate-500 mt-3">Current monthly book</p></div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Pending Filing Deadlines</span><i data-lucide="calendar-clock" class="w-5 h-5 text-amber-400"></i></div><div class="text-base font-semibold mt-4">CT Town Personal Property</div><p class="text-sm text-amber-300 mt-2">Due Nov 1</p></div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Audit Exceptions</span><i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400"></i></div><div class="text-3xl font-bold mt-4">3</div><p class="text-xs text-slate-500 mt-3">Items requiring review</p></div>
+          </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-          <div class="p-5 border-b border-slate-800"><h3 class="font-semibold">Wholesale client filing status</h3><p class="text-sm text-slate-400 mt-1">Current reconciliation and compliance workflow.</p></div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-              <thead class="text-xs uppercase text-slate-500 bg-slate-900/80"><tr><th class="px-5 py-4">Client</th><th class="px-5 py-4">Entity Type</th><th class="px-5 py-4">Last Reconciled</th><th class="px-5 py-4">Pending Filing</th><th class="px-5 py-4">System Status</th></tr></thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr class="hover:bg-slate-800/40"><td class="px-5 py-4 font-medium">Berlin Turnpike Gas Station</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 15, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Ready to File</span></td></tr>
-                <tr class="hover:bg-slate-800/40"><td class="px-5 py-4 font-medium">Newington Restaurant</td><td class="px-5 py-4 text-slate-400">S Corporation</td><td class="px-5 py-4">Oct 10, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">Missing Info</span></td></tr>
-                <tr class="hover:bg-slate-800/40"><td class="px-5 py-4 font-medium">Rocky Hill Plumbing</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 17, 2026</td><td class="px-5 py-4">1099 Vendor Review</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/10 text-rose-300 border border-rose-500/20">Audit Flag</span></td></tr>
-              </tbody>
-            </table>
+          <!-- TABLE -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center"><h3 class="font-semibold">Wholesale client filing status</h3><span class="text-xs text-slate-400">Click any row for deep-dive workpapers</span></div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="text-xs uppercase text-slate-500 bg-slate-900/80"><tr><th class="px-5 py-4">Client</th><th class="px-5 py-4">Entity Type</th><th class="px-5 py-4">Last Reconciled</th><th class="px-5 py-4">Pending Filing</th><th class="px-5 py-4">System Status</th></tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  <tr onclick="openClientModal('Berlin Turnpike Gas Station', 'LLC (1120-S)', '$446,000.00', 'CT Form OS-114', 'Ready to File')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Berlin Turnpike Gas Station</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 15, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Ready to File</span></td></tr>
+                  <tr onclick="openClientModal('Newington Restaurant', 'S Corporation (1065)', '$285,000.00', 'CT Form OS-114', 'Missing Info')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Newington Restaurant</td><td class="px-5 py-4 text-slate-400">S Corporation</td><td class="px-5 py-4">Oct 10, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">Missing Info</span></td></tr>
+                  <tr onclick="openClientModal('Rocky Hill Plumbing', 'LLC (1120-S)', '$185,000.00', '1099 Vendor Review', 'Audit Flag')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-400"></span>Rocky Hill Plumbing</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 17, 2026</td><td class="px-5 py-4">1099 Vendor Review</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/10 text-rose-300 border border-rose-500/20">Audit Flag</span></td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <p class="text-xs text-slate-600 mt-5">Demo portal. Tax figures and filing statuses require professional verification before use or submission.</p>
+
+        <!-- OTHER VIEWS (Placeholder containers for tabs) -->
+        <div id="view-clients" class="hidden">
+          <h2 class="text-2xl font-semibold mb-4">Client Portals Management</h2>
+          <p class="text-slate-400">Manage all wholesale client connections and QuickBooks bank feeds here.</p>
+        </div>
+        <div id="view-filings" class="hidden">
+          <h2 class="text-2xl font-semibold mb-4">Tax Filings & PDF Generation</h2>
+          <p class="text-slate-400">Automated Connecticut OS-114 and federal form generation queue.</p>
+        </div>
+        <div id="view-audit" class="hidden">
+          <h2 class="text-2xl font-semibold mb-4">Audit Exception Center</h2>
+          <p class="text-slate-400">Review commingled personal expenses and missing W-9 flags.</p>
+        </div>
       </section>
     </main>
   </div>
-  <script>lucide.createIcons();</script>
+
+  <!-- CLIENT DEEP-DIVE MODAL -->
+  <div id="clientModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeClientModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center"><i data-lucide="file-spreadsheet"></i></div>
+        <div><h3 id="modalClientName" class="text-lg font-bold text-white">Client Name</h3><p id="modalClientEntity" class="text-xs text-slate-400">Entity Type</p></div>
+      </div>
+      <div class="space-y-3 py-3 border-y border-slate-800 my-4 text-sm">
+        <div class="flex justify-between"><span class="text-slate-400">YTD Gross Revenue:</span><span id="modalRevenue" class="font-semibold text-white">$0.00</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Pending Tax Filing:</span><span id="modalFiling" class="font-semibold text-amber-400">Form</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">System Status:</span><span id="modalStatus" class="font-semibold text-emerald-400">Status</span></div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button onclick="closeClientModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition">Close</button>
+        <button onclick="alert('Workpaper packet downloaded successfully.')" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-semibold transition">Download Workpapers (.xlsx)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING MODAL -->
+  <div id="onboardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeOnboardModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-lg font-bold text-white mb-2">Onboard New Wholesale Client</h3>
+      <p class="text-xs text-slate-400 mb-4">Connect QuickBooks API and auto-provision bank feeds.</p>
+      <div class="space-y-3">
+        <div><label class="block text-xs text-slate-400 mb-1">Business Name</label><input type="text" placeholder="e.g. Hartford Auto Repair LLC" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Entity Classification</label><select class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"><option>LLC (1120-S)</option><option>Partnership (1065)</option><option>Sole Proprietorship (Sch C)</option><option>C-Corporation (1120)</option></select></div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button onclick="closeOnboardModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition">Cancel</button>
+        <button onclick="alert('Client successfully provisioned and queued for automated reconciliation!'); closeOnboardModal();" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-semibold transition">Provision Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE JS ENGINE -->
+  <script>
+    lucide.createIcons();
+
+    function switchTab(tabId) {
+      ['dashboard', 'clients', 'filings', 'audit'].forEach(id => {
+        document.getElementById('view-' + id).classList.add('hidden');
+        document.getElementById('nav-' + id).classList.remove('bg-slate-800', 'text-white');
+        document.getElementById('nav-' + id).classList.add('text-slate-400');
+      });
+      document.getElementById('view-' + tabId).classList.remove('hidden');
+      document.getElementById('nav-' + tabId).classList.add('bg-slate-800', 'text-white');
+      document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
+    }
+
+    function openClientModal(name, entity, revenue, filing, status) {
+      document.getElementById('modalClientName').innerText = name;
+      document.getElementById('modalClientEntity').innerText = entity;
+      document.getElementById('modalRevenue').innerText = revenue;
+      document.getElementById('modalFiling').innerText = filing;
+      document.getElementById('modalStatus').innerText = status;
+      document.getElementById('clientModal').classList.remove('hidden');
+      document.getElementById('clientModal').classList.add('flex');
+    }
+
+    function closeClientModal() {
+      document.getElementById('clientModal').classList.remove('flex');
+      document.getElementById('clientModal').classList.add('hidden');
+    }
+
+    function openOnboardModal() {
+      document.getElementById('onboardModal').classList.remove('hidden');
+      document.getElementById('onboardModal').classList.add('flex');
+    }
+
+    function closeOnboardModal() {
+      document.getElementById('onboardModal').classList.remove('flex');
+      document.getElementById('onboardModal').classList.add('hidden');
+    }
+  </script>
 </body>
 </html>
