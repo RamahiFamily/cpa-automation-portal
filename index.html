@@ -40,11 +40,10 @@
       </header>
 
       <section class="p-5 sm:p-8 max-w-7xl mx-auto">
-        <!-- VIEW CONTAINER -->
+        <!-- VIEW 1: DASHBOARD -->
         <div id="view-dashboard">
           <div class="mb-6"><h2 class="text-2xl font-semibold">Executive overview</h2><p class="text-slate-400 mt-1">Client readiness, revenue, filing deadlines, and audit exceptions.</p></div>
           
-          <!-- KPIS -->
           <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
             <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Wholesale Clients</span><i data-lucide="users" class="w-5 h-5 text-sky-400"></i></div><div class="text-3xl font-bold mt-4">42<span class="text-base font-normal text-slate-500">/100</span></div><div class="mt-3 h-1.5 bg-slate-800 rounded-full"><div class="h-full w-[42%] bg-sky-500 rounded-full"></div></div></div>
             <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Monthly Recurring Revenue</span><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-emerald-400"></i></div><div class="text-3xl font-bold mt-4">$5,250</div><p class="text-xs text-slate-500 mt-3">Current monthly book</p></div>
@@ -52,7 +51,6 @@
             <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Audit Exceptions</span><i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400"></i></div><div class="text-3xl font-bold mt-4">3</div><p class="text-xs text-slate-500 mt-3">Items requiring review</p></div>
           </div>
 
-          <!-- TABLE -->
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center"><h3 class="font-semibold">Wholesale client filing status</h3><span class="text-xs text-slate-400">Click any row for deep-dive workpapers</span></div>
             <div class="overflow-x-auto">
@@ -68,18 +66,57 @@
           </div>
         </div>
 
-        <!-- OTHER VIEWS (Placeholder containers for tabs) -->
+        <!-- VIEW 2: CLIENTS MANAGEMENT -->
         <div id="view-clients" class="hidden">
-          <h2 class="text-2xl font-semibold mb-4">Client Portals Management</h2>
-          <p class="text-slate-400">Manage all wholesale client connections and QuickBooks bank feeds here.</p>
+          <div class="mb-6 flex justify-between items-center">
+            <div><h2 class="text-2xl font-semibold">Client Portals Management</h2><p class="text-slate-400 mt-1">Manage QuickBooks API bank feeds and automated general ledger accounts.</p></div>
+            <button onclick="openOnboardModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition">Add Client</button>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">BT</div>
+                <div><h4 class="font-semibold text-white">Berlin Turnpike Gas Station</h4><p class="text-xs text-slate-400">QBO Connected • Last synced 10m ago</p></div>
+              </div>
+              <span class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20">Active Feed</span>
+            </div>
+            <div class="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">NR</div>
+                <div><h4 class="font-semibold text-white">Newington Restaurant</h4><p class="text-xs text-slate-400">QBO Connected • Pending bank auth</p></div>
+              </div>
+              <span class="text-xs bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20">Action Required</span>
+            </div>
+          </div>
         </div>
+
+        <!-- VIEW 3: FILINGS -->
         <div id="view-filings" class="hidden">
-          <h2 class="text-2xl font-semibold mb-4">Tax Filings & PDF Generation</h2>
-          <p class="text-slate-400">Automated Connecticut OS-114 and federal form generation queue.</p>
+          <div class="mb-6"><h2 class="text-2xl font-semibold">Tax Filings & PDF Generation</h2><p class="text-slate-400 mt-1">Automated Connecticut OS-114 and federal form preparation queue.</p></div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase text-slate-500 bg-slate-900/80"><tr><th class="px-5 py-4">Form / Document</th><th class="px-5 py-4">Jurisdiction</th><th class="px-5 py-4">Due Date</th><th class="px-5 py-4">Status</th></tr></thead>
+              <tbody class="divide-y divide-slate-800">
+                <tr><td class="px-5 py-4 font-medium">CT Form OS-114 (Sales & Use)</td><td class="px-5 py-4 text-slate-400">State of Connecticut</td><td class="px-5 py-4">Nov 30, 2026</td><td class="px-5 py-4"><span class="text-emerald-400 text-xs bg-emerald-500/10 px-2.5 py-1 rounded-full">Ready to E-File</span></td></tr>
+                <tr><td class="px-5 py-4 font-medium">Town Personal Property Decl.</td><td class="px-5 py-4 text-slate-400">Newington / Rocky Hill</td><td class="px-5 py-4">Nov 1, 2026</td><td class="px-5 py-4"><span class="text-amber-400 text-xs bg-amber-500/10 px-2.5 py-1 rounded-full">Pending Signature</span></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <!-- VIEW 4: AUDIT CENTER -->
         <div id="view-audit" class="hidden">
-          <h2 class="text-2xl font-semibold mb-4">Audit Exception Center</h2>
-          <p class="text-slate-400">Review commingled personal expenses and missing W-9 flags.</p>
+          <div class="mb-6"><h2 class="text-2xl font-semibold">Audit Exception Center</h2><p class="text-slate-400 mt-1">AI anomaly scanner logs for commingled expenses and missing W-9s.</p></div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
+              <i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400 mt-0.5"></i>
+              <div><h4 class="font-semibold text-rose-300">Missing W-9 Form — Rocky Hill Plumbing</h4><p class="text-xs text-rose-200/80 mt-1">Subcontractor paid $1,850 via Zelle with no W-9 on file. Automated text prompt dispatched.</p></div>
+            </div>
+            <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+              <i data-lucide="alert-circle" class="w-5 h-5 text-amber-400 mt-0.5"></i>
+              <div><h4 class="font-semibold text-amber-300">Possible Commingled Personal Expense — Newington Restaurant</h4><p class="text-xs text-amber-200/80 mt-1">Found charge at Netflix ($22.99) on business operating card. Marked for client review.</p></div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
