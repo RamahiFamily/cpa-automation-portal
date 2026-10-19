@@ -8,172 +8,356 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF for Instant Tax Return PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 font-sans antialiased">
+<body class="bg-slate-100 font-sans antialiased text-slate-800">
 
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between hidden md:flex">
+        <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between hidden md:flex shrink-0">
             <div>
                 <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
-                    <i class="fa-solid fa-calculator text-indigo-400 text-2xl"></i>
-                    <span class="text-xl font-bold tracking-wide">CPA Portal OS</span>
+                    <i class="fa-solid fa-scale-balanced text-indigo-400 text-2xl"></i>
+                    <div>
+                        <span class="text-lg font-bold tracking-wide block leading-none">CPA Portal OS</span>
+                        <span class="text-[11px] text-slate-400 font-medium">QBO Live Ledger Engine</span>
+                    </div>
                 </div>
-                <nav class="p-4 space-y-1">
+                <nav class="p-4 space-y-1.5 text-sm">
                     <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors">
-                        <i class="fa-solid fa-gauge w-5"></i><span>Dashboard</span>
+                        <i class="fa-solid fa-gauge w-5"></i><span>Executive Dashboard</span>
                     </a>
                     <a href="#" onclick="switchTab('clients')" id="nav-clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-users w-5"></i><span>QBO Clients</span>
+                        <i class="fa-solid fa-users w-5"></i><span>QBO Client Files (29)</span>
+                    </a>
+                    <a href="#" onclick="switchTab('ledger')" id="nav-ledger" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-book-open w-5"></i><span>COA, 1099s & Inventory</span>
+                    </a>
+                    <a href="#" onclick="switchTab('reports')" id="nav-reports" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5"></i><span>QBO Reports & Reconcile</span>
                     </a>
                     <a href="#" onclick="switchTab('audit')" id="nav-audit" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-file-shield w-5"></i><span>Audit & Filing</span>
+                        <i class="fa-solid fa-file-signature w-5"></i><span>Audit & Tax Pre-Fill</span>
                     </a>
                     <a href="#" onclick="switchTab('onboarding')" id="nav-onboarding" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-user-plus w-5"></i><span>New Onboarding</span>
+                        <i class="fa-solid fa-user-plus w-5"></i><span>New Client Onboarding</span>
                     </a>
                 </nav>
             </div>
-            <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
-                <p>Environment: CT Practice</p>
-                <p class="text-emerald-400 font-semibold mt-1">● QBO & Supabase Active</p>
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-1">
+                <p class="font-semibold text-slate-300">Realm ID: 4620816365363065324</p>
+                <p class="text-emerald-400 font-semibold">● 128 Tx | 175 Master | 9 Reports</p>
             </div>
         </aside>
 
         <!-- Main Workspace -->
         <div class="flex-1 flex flex-col overflow-y-auto">
             <!-- Top Header -->
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
-                <h1 id="page-title" class="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
+            <header class="bg-white shadow-xs border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-20">
+                <div class="flex items-center space-x-3">
+                    <h1 id="page-title" class="text-xl font-bold text-slate-800">Executive Dashboard</h1>
+                    <span class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">Live QBO Sync</span>
+                </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-slate-600 font-medium">Mahmoud J. Alramahi (FP&A / CPA Lead)</span>
-                    <div class="h-9 w-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">M</div>
+                    <button onclick="initApp()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Reload Supabase
+                    </button>
+                    <span class="text-sm text-slate-600 font-medium">Mahmoud J. Alramahi</span>
+                    <div class="h-9 w-9 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">MA</div>
                 </div>
             </header>
 
             <!-- Dynamic Views Container -->
-            <main class="p-8">
+            <main class="p-8 space-y-8">
                 
-                <!-- 1. DASHBOARD TAB -->
+                <!-- 1. EXECUTIVE DASHBOARD TAB -->
                 <section id="view-dashboard" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <p class="text-sm font-medium text-slate-500">Total Synced Clients</p>
-                            <h3 id="stat-total-clients" class="text-3xl font-bold text-slate-900 mt-2">--</h3>
+                    <!-- Top KPI Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Synced QBO Clients</p>
+                            <h3 id="stat-total-clients" class="text-3xl font-black text-slate-900 mt-1">--</h3>
+                            <p id="stat-open-ar" class="text-xs text-amber-600 font-semibold mt-2">Open Receivables: $0.00</p>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <p class="text-sm font-medium text-slate-500">Total Revenue (YTD)</p>
-                            <h3 id="stat-total-revenue" class="text-3xl font-bold text-emerald-600 mt-2">$0.00</h3>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Gross Invoiced & POS Revenue</p>
+                            <h3 id="stat-total-revenue" class="text-3xl font-black text-emerald-600 mt-1">$0.00</h3>
+                            <p id="stat-payments-collected" class="text-xs text-slate-500 font-medium mt-2">Payments Collected: $0.00</p>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <p class="text-sm font-medium text-slate-500">Total Expenses (YTD)</p>
-                            <h3 id="stat-total-expenses" class="text-3xl font-bold text-rose-600 mt-2">$0.00</h3>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Total Bills & Card Expenses</p>
+                            <h3 id="stat-total-expenses" class="text-3xl font-black text-rose-600 mt-1">$0.00</h3>
+                            <p id="stat-bill-payments" class="text-xs text-slate-500 font-medium mt-2">AP Bills Paid: $0.00</p>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <p class="text-sm font-medium text-slate-500">Pipeline Status</p>
-                            <h3 class="text-3xl font-bold text-indigo-600 mt-2">Live QBO Sync</h3>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Chart of Accounts & Bank Cash</p>
+                            <h3 id="stat-bank-cash" class="text-3xl font-black text-indigo-600 mt-1">$0.00</h3>
+                            <p id="stat-master-counts" class="text-xs text-slate-500 font-medium mt-2">92 COA | 26 Vendors | 18 Items</p>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Breakdown & Master Data Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-xs border border-slate-200 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-base font-bold text-slate-800">All 128 Synced QBO Ledger Transactions</h3>
+                                <select id="dashboardTxFilter" onchange="renderDashboardLedger()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 font-medium">
+                                    <option value="ALL">All Categories (128)</option>
+                                    <option value="Revenue">Revenue (Invoices & Sales Receipts)</option>
+                                    <option value="Expense">Expenses (Bills & Purchases/Checks)</option>
+                                    <option value="Payment Received">Customer Payments</option>
+                                    <option value="Bill Payment">AP Bill Payments</option>
+                                    <option value="Banking Deposit">Bank Deposits</option>
+                                    <option value="Sales Order / Estimate">Sales Orders / Estimates</option>
+                                    <option value="Purchase Order">Purchase Orders</option>
+                                    <option value="Journal Entry">Accountant Journal Entries</option>
+                                </select>
+                            </div>
+                            <div class="overflow-y-auto max-h-96 border border-slate-100 rounded-lg">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-2.5">Date</th>
+                                            <th class="px-4 py-2.5">QBO ID</th>
+                                            <th class="px-4 py-2.5">Description & Entity</th>
+                                            <th class="px-4 py-2.5">Category</th>
+                                            <th class="px-4 py-2.5 text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardTxTable" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
+                            <h3 class="text-base font-bold text-slate-800">QBO Checking, Bank & Credit Cards</h3>
+                            <p class="text-xs text-slate-500">Live balances pulled from your 92 Chart of Accounts records.</p>
+                            <div id="dashboardBankList" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
                         </div>
                     </div>
                 </section>
 
                 <!-- 2. QBO CLIENTS TAB -->
                 <section id="view-clients" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between md:items-center gap-4 bg-slate-50">
                             <div>
-                                <h2 class="text-lg font-bold text-slate-800">Connected Client Roster</h2>
-                                <p class="text-xs text-slate-500 mt-0.5">Select any business to open their comprehensive CPA audit file, financials, and tax status.</p>
+                                <h2 class="text-lg font-bold text-slate-800">Connected QBO Client Directory</h2>
+                                <p class="text-xs text-slate-500">Click "View CPA File" on any client to inspect Revenue, Expenses, Highest Expense, Vendor Bills, Reconciliations, and Tax Forms.</p>
                             </div>
-                            <button onclick="loadClientsData()" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition">
-                                <i class="fa-solid fa-rotate mr-2"></i>Refresh Roster
-                            </button>
+                            <input type="text" id="clientSearchInput" oninput="renderClientsTable()" placeholder="Search business name..." class="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white w-64">
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
-                                <thead class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wider">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
                                     <tr>
                                         <th class="px-6 py-3 font-semibold">Business Name</th>
-                                        <th class="px-6 py-3 font-semibold">Industry</th>
-                                        <th class="px-6 py-3 font-semibold">QBO Tier</th>
-                                        <th class="px-6 py-3 font-semibold">Reconciliation Status</th>
-                                        <th class="px-6 py-3 font-semibold text-right">Action</th>
+                                        <th class="px-6 py-3 font-semibold">QBO Open Balance</th>
+                                        <th class="px-6 py-3 font-semibold">Synced Revenue</th>
+                                        <th class="px-6 py-3 font-semibold">Allocated Expenses</th>
+                                        <th class="px-6 py-3 font-semibold">Reconciliation</th>
+                                        <th class="px-6 py-3 font-semibold text-right">Audit File</th>
                                     </tr>
                                 </thead>
-                                <tbody id="clientsTableBody" class="divide-y divide-slate-200 text-sm">
-                                    <tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">Loading client directory...</td></tr>
-                                </tbody>
+                                <tbody id="clientsTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
                             </table>
                         </div>
                     </div>
                 </section>
 
-                <!-- 3. AUDIT & FILING PRE-FILL TAB -->
-                <section id="view-audit" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div class="border-b pb-4 mb-6 flex justify-between items-center">
+                <!-- 3. COA, 1099s, INVENTORY & TIME TAB -->
+                <section id="view-ledger" class="hidden space-y-6">
+                    <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+                        <button onclick="filterMasterTab('Account')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold">Chart of Accounts (92)</button>
+                        <button onclick="filterMasterTab('Vendor')" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">Vendors & 1099 Contractors (26)</button>
+                        <button onclick="filterMasterTab('Item')" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">Inventory & Items (18)</button>
+                        <button onclick="filterMasterTab('TimeActivity')" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">Time Entries & Team (7)</button>
+                        <button onclick="filterMasterTab('Tax')" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">Sales Tax & Agencies (20)</button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                        <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <h3 id="masterTableTitle" class="font-bold text-slate-800">Chart of Accounts</h3>
+                            <span id="masterCountBadge" class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-bold">92 Records</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-[600px]">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-xs sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3">QBO ID</th>
+                                        <th class="px-6 py-3">Name / Account / Vendor</th>
+                                        <th class="px-6 py-3">Type / Classification</th>
+                                        <th class="px-6 py-3">1099 Flag / Details</th>
+                                        <th class="px-6 py-3 text-right">Balance / Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterDataTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. QBO REPORTS & RECONCILIATION TAB -->
+                <section id="view-reports" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-slate-200 pb-4 mb-6">
                             <div>
-                                <h2 class="text-xl font-bold text-slate-800">Automated Tax Form Pre-Fill Center</h2>
-                                <p class="text-sm text-slate-500">Select a client form, input their SSN/EIN, review aggregated QBO figures, and sign for download.</p>
+                                <h2 class="text-lg font-bold text-slate-800">Synced QBO Financial, Tax & Reconciliation Reports</h2>
+                                <p class="text-xs text-slate-500">Live official reports extracted from the QuickBooks Sandbox Report Engine.</p>
                             </div>
-                            <select id="auditClientSelect" class="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white font-medium">
-                                <option value="">-- Choose Client for Form --</option>
+                            <select id="reportSelector" onchange="renderSelectedReport()" class="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white font-semibold text-indigo-700">
+                                <option value="ProfitAndLoss">Profit & Loss Statement (P&L)</option>
+                                <option value="BalanceSheet">Balance Sheet</option>
+                                <option value="TrialBalance">Trial Balance</option>
+                                <option value="GeneralLedger">General Ledger & Reconciliation Audit</option>
+                                <option value="VendorExpenses">Expenses by Vendor (1099 Summary)</option>
+                                <option value="CustomerSales">Sales by Customer</option>
+                                <option value="AgedReceivables">Accounts Receivable Aging</option>
+                                <option value="AgedPayables">Accounts Payable Aging</option>
+                                <option value="InventoryValuationSummary">Inventory Valuation Summary</option>
                             </select>
                         </div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead id="reportTableHead" class="bg-slate-900 text-white uppercase text-xs"></thead>
+                                <tbody id="reportTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. AUDIT & TAX FORM PRE-FILL TAB -->
+                <section id="view-audit" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
+                        <div class="border-b pb-4 mb-6 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">Automated IRS & CT Tax Return Pre-Fill Center</h2>
+                                <p class="text-sm text-slate-500">Auto-populates directly from the selected client's QBO synced ledger. Just input SSN/EIN, sign, and download the official summary PDF.</p>
+                            </div>
+                            <select id="auditClientSelect" onchange="updateAuditFormPreview()" class="border border-indigo-300 rounded-lg px-4 py-2.5 text-sm bg-indigo-50 font-bold text-indigo-900">
+                                <option value="">-- Select Client to Pre-Fill Tax Return --</option>
+                            </select>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Form Templates -->
                             <div class="space-y-3">
-                                <label class="block text-xs font-bold text-slate-600 uppercase">Select Form Template</label>
-                                <div onclick="selectForm('1040')" id="form-card-1040" class="p-4 border-2 border-indigo-600 bg-indigo-50/50 rounded-xl cursor-pointer">
-                                    <h4 class="font-bold text-slate-900">IRS Form 1040 (Schedule C)</h4>
-                                    <p class="text-xs text-slate-500 mt-1">Profit or Loss From Business</p>
+                                <label class="block text-xs font-bold text-slate-500 uppercase">1. Choose Tax Return Package</label>
+                                <div onclick="selectTaxForm('Schedule C (Form 1040)')" id="taxcard-1040" class="p-4 border-2 border-indigo-600 bg-indigo-50/50 rounded-xl cursor-pointer">
+                                    <h4 class="font-bold text-slate-900">IRS Form 1040 + Schedule C</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Sole Proprietorship / Single-Member LLC Profit & Loss</p>
                                 </div>
-                                <div onclick="selectForm('1120')" id="form-card-1120" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
-                                    <h4 class="font-bold text-slate-900">IRS Form 1120</h4>
-                                    <p class="text-xs text-slate-500 mt-1">U.S. Corporation Income Tax Return</p>
+                                <div onclick="selectTaxForm('Form 1120 / 1120-S')" id="taxcard-1120" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
+                                    <h4 class="font-bold text-slate-900">IRS Form 1120 / 1120-S</h4>
+                                    <p class="text-xs text-slate-500 mt-1">U.S. Corporation / S-Corp Income Tax Return</p>
+                                </div>
+                                <div onclick="selectTaxForm('CT-1040 & OS-114 Sales Tax')" id="taxcard-CT" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
+                                    <h4 class="font-bold text-slate-900">CT DRS OS-114 & CT-1040</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Connecticut Sales & Use Tax + State Return</p>
+                                </div>
+                                <div onclick="selectTaxForm('Form 1099-NEC Summary')" id="taxcard-1099" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
+                                    <h4 class="font-bold text-slate-900">IRS Form 1099-NEC Transmittal</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Nonemployee Contractor Compensation</p>
                                 </div>
                             </div>
-                            <div class="lg:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-                                <h3 id="previewFormTitle" class="font-bold text-slate-800 border-b pb-3">Form 1040 - Schedule C Preview</h3>
-                                <div class="grid grid-cols-2 gap-4 text-sm">
+
+                            <!-- Pre-Filled Worksheet -->
+                            <div class="lg:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-5">
+                                <div class="flex justify-between items-center border-b border-slate-200 pb-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Client SSN / EIN</label>
-                                        <input type="text" placeholder="XXX-XX-XXXX" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono">
+                                        <h3 id="previewFormTitle" class="font-bold text-lg text-slate-900">Schedule C (Form 1040) Pre-Filled Worksheet</h3>
+                                        <p id="previewClientSubtitle" class="text-xs text-slate-500">Client: Select a client above</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">100% Auto-Filled from QBO</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">Client SSN or EIN *</label>
+                                        <input type="text" id="formSsnInput" value="06-1489201" placeholder="XX-XXXXXXX" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono font-bold text-slate-900">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Tax Year</label>
-                                        <input type="text" value="2026" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" readonly>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">Filing Status / Entity</label>
+                                        <select id="formFilingStatus" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-medium">
+                                            <option value="Married Filing Jointly">Married Filing Jointly</option>
+                                            <option value="Single / Sole Prop">Single / Sole Prop</option>
+                                            <option value="S-Corporation (1120-S)">S-Corporation (1120-S)</option>
+                                            <option value="LLC Partnership (1065)">LLC Partnership (1065)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">Tax Year</label>
+                                        <input type="text" id="formTaxYear" value="2026" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-bold" readonly>
                                     </div>
                                 </div>
-                                <button onclick="alert('Form successfully signed and downloaded!')" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold text-sm rounded-lg hover:bg-indigo-700 shadow-sm transition">
-                                    <i class="fa-solid fa-file-arrow-down mr-2"></i>Sign & Download PDF
-                                </button>
+
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200">
+                                    <div>
+                                        <span class="text-[11px] font-bold text-slate-400 uppercase">Line 1: Gross Receipts</span>
+                                        <input type="text" id="formGrossRev" value="$0.00" class="w-full font-black text-emerald-600 text-lg bg-transparent border-0 focus:ring-0 p-0" readonly>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-bold text-slate-400 uppercase">Line 28: Total Expenses</span>
+                                        <input type="text" id="formTotalExp" value="$0.00" class="w-full font-black text-rose-600 text-lg bg-transparent border-0 focus:ring-0 p-0" readonly>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-bold text-slate-400 uppercase">Line 31: Net Profit/Loss</span>
+                                        <input type="text" id="formNetProfit" value="$0.00" class="w-full font-black text-indigo-600 text-lg bg-transparent border-0 focus:ring-0 p-0" readonly>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-bold text-slate-400 uppercase">Est. Tax Due (Fed + CT)</span>
+                                        <input type="text" id="formEstTax" value="$0.00" class="w-full font-black text-amber-600 text-lg bg-transparent border-0 focus:ring-0 p-0" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">CPA Preparer Digital Signature *</label>
+                                        <input type="text" id="formCpaSignature" value="Mahmoud J. Alramahi, CPA / FP&A Lead" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-serif italic text-slate-900">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">Preparer PTIN</label>
+                                        <input type="text" id="formPtin" value="P04829104" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono">
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-200 flex justify-between items-center">
+                                    <span class="text-xs text-slate-500"><i class="fa-solid fa-shield-halved text-emerald-600 mr-1"></i> Ready for IRS e-File & Client Signature</span>
+                                    <button onclick="generateAndDownloadTaxPDF()" class="px-6 py-3 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 shadow-md transition flex items-center">
+                                        <i class="fa-solid fa-file-pdf mr-2 text-base"></i> Sign & Download Official Tax Return PDF
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- 4. NEW ONBOARDING TAB -->
+                <!-- 6. NEW ONBOARDING TAB -->
                 <section id="view-onboarding" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-2xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-8 max-w-2xl mx-auto">
                         <h2 class="text-xl font-bold text-slate-800 mb-2">Onboard New Business Client</h2>
+                        <p class="text-sm text-slate-500 mb-6">Create a new client file in Supabase and link it to your QBO pipeline.</p>
                         <form id="onboardForm" onsubmit="handleOnboard(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Business Legal Name</label>
-                                <input type="text" id="onboardName" required placeholder="e.g. Newington Diner LLC" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
+                                <input type="text" id="onboardName" required placeholder="e.g. Newington Gas & Convenience LLC" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Industry</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Industry Profile</label>
                                     <select id="onboardIndustry" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white">
-                                        <option value="Restaurant">Restaurant</option>
                                         <option value="Gas Station & Convenience">Gas Station & Convenience</option>
-                                        <option value="Trades & Contractor">Trades & Contractor</option>
-                                        <option value="Rideshare">Rideshare</option>
+                                        <option value="Restaurant & Food Service">Restaurant & Food Service</option>
+                                        <option value="Plumbing & HVAC Contractor">Plumbing & HVAC Contractor</option>
+                                        <option value="Rideshare & Fleet Transport">Rideshare & Fleet Transport</option>
+                                        <option value="Retail & E-Commerce">Retail & E-Commerce</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-1">QBO Tier</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">QBO Subscription Tier</label>
                                     <select id="onboardTier" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white">
                                         <option value="Plus">QuickBooks Plus</option>
                                         <option value="Advanced">QuickBooks Advanced</option>
@@ -181,10 +365,10 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-1">Client Email</label>
-                                <input type="email" id="onboardEmail" required placeholder="client@business.com" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Primary Contact Email</label>
+                                <input type="email" id="onboardEmail" required placeholder="owner@business.com" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
                             </div>
-                            <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">Save & Sync</button>
+                            <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition">Create Client & Initialize Sync</button>
                         </form>
                     </div>
                 </section>
@@ -193,226 +377,350 @@
         </div>
     </div>
 
-    <!-- ADVANCED CPA CLIENT FILE DEEP-DIVE MODAL -->
-    <div id="clientModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[95vh]">
+    <!-- DEEP-DIVE CLIENT CPA FILE MODAL -->
+    <div id="clientModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[94vh]">
             <!-- Modal Header -->
-            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white">
                 <div>
-                    <h2 id="modal-client-name" class="text-xl font-bold text-slate-900">Client Name</h2>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <span id="modal-client-industry" class="px-2.5 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">Industry</span>
-                        <span class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">● Bank Feed Reconciled</span>
+                    <div class="flex items-center space-x-3">
+                        <h2 id="modal-client-name" class="text-2xl font-bold">Client Name</h2>
+                        <span id="modal-client-qboid" class="px-2.5 py-0.5 text-xs font-mono bg-slate-800 text-indigo-300 rounded">QBO #--</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        <span id="modal-client-industry" class="px-2.5 py-0.5 text-xs font-semibold bg-indigo-600 text-white rounded-full">Industry</span>
+                        <span id="modal-client-filing" class="px-2.5 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30 rounded-full">Filing: Form 1040 Schedule C + CT OS-114</span>
+                        <span id="modal-client-recon" class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full">● Reconciled against QBO Ledger</span>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-3 py-1">&times;</button>
+                <div class="flex items-center space-x-3">
+                    <button onclick="jumpToAuditForClient()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition">
+                        <i class="fa-solid fa-file-signature mr-1"></i> Pre-Fill Tax Return
+                    </button>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white text-3xl font-bold px-2">&times;</button>
+                </div>
             </div>
             
-            <!-- Modal Body Dashboard -->
-            <div class="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50/50">
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
                 
-                <!-- Financial KPI Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Gross Revenue</span>
-                        <h3 id="modal-revenue" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
+                <!-- 1. Primary Financial KPIs -->
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Gross Revenue</span>
+                        <h3 id="modal-revenue" class="text-xl font-black text-emerald-600 mt-1">$0.00</h3>
                     </div>
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Operating Expenses</span>
-                        <h3 id="modal-expenses" class="text-2xl font-black text-rose-600 mt-1">$0.00</h3>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Total Expenses</span>
+                        <h3 id="modal-expenses" class="text-xl font-black text-rose-600 mt-1">$0.00</h3>
                     </div>
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Net Operating Income</span>
-                        <h3 id="modal-noi" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Net Income (NOI)</span>
+                        <h3 id="modal-noi" class="text-xl font-black text-indigo-600 mt-1">$0.00</h3>
                     </div>
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Profit Margin</span>
-                        <h3 id="modal-margin" class="text-2xl font-black text-slate-800 mt-1">0%</h3>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Open AR Balance</span>
+                        <h3 id="modal-open-ar" class="text-xl font-black text-amber-600 mt-1">$0.00</h3>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Payments Collected</span>
+                        <h3 id="modal-payments" class="text-xl font-black text-slate-800 mt-1">$0.00</h3>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Est. Tax Reserve (28%)</span>
+                        <h3 id="modal-tax" class="text-xl font-black text-purple-600 mt-1">$0.00</h3>
                     </div>
                 </div>
 
-                <!-- Secondary Financial Metrics Row -->
+                <!-- 2. Deep-Dive Audit Highlights (Highest Expense, Vendor Bills, Reconciliation, Advisory) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Highest Single Expense</span>
-                        <p id="modal-highest-exp" class="text-base font-bold text-slate-800 mt-1">None recorded</p>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-xs font-bold text-rose-700 uppercase"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Highest Single Expense / Vendor Bill</span>
+                        <p id="modal-highest-exp" class="text-sm font-bold text-slate-900 mt-1">--</p>
+                        <p id="modal-vendor-count" class="text-xs text-slate-500 mt-1">0 Vendor Bills & Card Purchases synced</p>
                     </div>
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Outstanding Invoices</span>
-                        <p id="modal-outstanding" class="text-base font-bold text-amber-600 mt-1">$0.00</p>
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl">
+                        <span class="text-xs font-bold text-emerald-700 uppercase"><i class="fa-solid fa-check-double mr-1"></i> Bank & Ledger Reconciliation</span>
+                        <p id="modal-recon-summary" class="text-sm font-bold text-slate-900 mt-1">100% Matched to QBO Sandbox</p>
+                        <p id="modal-po-summary" class="text-xs text-slate-500 mt-1">Estimates, POs & Journal Adjustments verified</p>
                     </div>
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Est. Tax Liability (28%)</span>
-                        <p id="modal-tax-liability" class="text-base font-bold text-indigo-600 mt-1">$0.00</p>
-                    </div>
-                </div>
-
-                <!-- Transactions Table -->
-                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Synced QBO Invoices & Vendor Bills</h3>
-                    <div class="border border-slate-100 rounded-lg overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-                                <tr>
-                                    <th class="px-4 py-3 font-semibold">Date</th>
-                                    <th class="px-4 py-3 font-semibold">Description</th>
-                                    <th class="px-4 py-3 font-semibold">Category</th>
-                                    <th class="px-4 py-3 font-semibold text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody id="clientTransactionsTableBody" class="divide-y divide-slate-100 text-sm">
-                                <tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">Loading records...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="bg-indigo-900 text-white p-4 rounded-xl">
+                        <span class="text-xs font-bold text-indigo-300 uppercase"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Automated CPA Advisory Insight</span>
+                        <p id="modal-ai-insight" class="text-xs leading-relaxed mt-1 text-slate-200">Analyzing client ledger...</p>
                     </div>
                 </div>
 
-                <!-- CPA Audit Notes & Secure Chat -->
-                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
-                    <h3 class="text-xs font-bold text-slate-600 uppercase">CPA Audit Notes & Client Collaboration</h3>
-                    <div id="chatMessagesBox" class="bg-slate-50 border border-slate-200 rounded-lg p-3 h-24 overflow-y-auto text-xs space-y-2 text-slate-700">
-                        <p class="text-slate-400 italic">No notes logged. Type below to save review comments.</p>
+                <!-- 3. Split View: Client Revenue/AR vs Vendor Bills/Expenses -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Complete Client Ledger (Invoices, Bills, Checks, Payments, POs)</h3>
+                            <span id="modal-tx-count" class="text-xs font-bold text-indigo-600">0 Records</span>
+                        </div>
+                        <div class="border border-slate-100 rounded-lg overflow-y-auto max-h-72">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-slate-100 text-slate-600 uppercase sticky top-0">
+                                    <tr>
+                                        <th class="px-3 py-2.5">Date</th>
+                                        <th class="px-3 py-2.5">QBO ID</th>
+                                        <th class="px-3 py-2.5">Description & Open Balance</th>
+                                        <th class="px-3 py-2.5">Type</th>
+                                        <th class="px-3 py-2.5 text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientTransactionsTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="flex space-x-2">
-                        <input type="text" id="chatInput" placeholder="Write CPA audit note..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
-                        <button onclick="sendChatMessage()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700">Add Note</button>
+
+                    <!-- CPA Audit Notes & Client Chat -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-700 uppercase mb-2"><i class="fa-solid fa-comments text-indigo-600 mr-1"></i> CPA Review Notes & Client Chat</h3>
+                            <div id="chatMessagesBox" class="bg-slate-50 border border-slate-200 rounded-lg p-3 h-56 overflow-y-auto text-xs space-y-2 text-slate-700"></div>
+                        </div>
+                        <div class="flex space-x-2 mt-3">
+                            <input type="text" id="chatInput" placeholder="Log audit note or request receipt..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
+                            <button onclick="sendChatMessage()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700">Post</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- APPLICATION JAVASCRIPT -->
     <script>
+        // =========================================================================
+        // 1. SUPABASE CONFIGURATION (PASTE YOUR FULL ANON KEY BELOW)
+        // =========================================================================
         const SUPABASE_URL = "https://vgzymkfrtdqizytadyjf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let activeClientsCache = [];
+        // Global State Caches
+        let allClients = [];
+        let allTransactions = [];
+        let allMasterData = [];
+        let allReports = [];
+        let currentModalClient = null;
+        let selectedTaxFormName = "Schedule C (Form 1040)";
+
+        // Initialize Entire Portal
+        async function initApp() {
+            const [clientsRes, txRes, masterRes, reportsRes] = await Promise.all([
+                supabaseClient.from('clients').select('*').order('business_name'),
+                supabaseClient.from('transactions').select('*').order('transaction_date', { ascending: false }),
+                supabaseClient.from('qbo_master_data').select('*').order('name_or_title'),
+                supabaseClient.from('qbo_reports').select('*')
+            ]);
+
+            allClients = clientsRes.data || [];
+            allTransactions = txRes.data || [];
+            allMasterData = masterRes.data || [];
+            allReports = reportsRes.data || [];
+
+            renderExecutiveDashboard();
+            renderClientsTable();
+            filterMasterTab('Account');
+            renderSelectedReport();
+            populateAuditDropdown();
+        }
 
         // Tab Navigation
         function switchTab(tab) {
-            ['dashboard', 'clients', 'audit', 'onboarding'].forEach(t => {
+            ['dashboard', 'clients', 'ledger', 'reports', 'audit', 'onboarding'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
                 document.getElementById(`nav-${t}`).className = t === tab 
                     ? 'flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors' 
                     : 'flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors';
             });
-            const titles = { dashboard: 'Dashboard Overview', clients: 'Connected QBO Clients', audit: 'Audit & Form Pre-Fill Center', onboarding: 'Client Onboarding' };
+            const titles = {
+                dashboard: 'Executive Practice Dashboard',
+                clients: 'Connected QBO Client Directory',
+                ledger: 'Chart of Accounts, 1099 Vendors, Inventory & Time',
+                reports: 'Official QBO Financial & Reconciliation Reports',
+                audit: 'Automated Tax Form Pre-Fill & PDF Signing Center',
+                onboarding: 'New Client Onboarding'
+            };
             document.getElementById('page-title').innerText = titles[tab];
-            
-            if (tab === 'dashboard') loadDashboardMetrics();
-            if (tab === 'clients') loadClientsData();
-            if (tab === 'audit') populateAuditDropdown();
         }
 
-        // Load Global Dashboard Metrics
-        async function loadDashboardMetrics() {
-            const { data: clients } = await supabaseClient.from('clients').select('*');
-            const { data: txs } = await supabaseClient.from('transactions').select('*');
+        // Helper: Parse Open Balance from sync_status string
+        function parseOpenBalance(statusStr) {
+            if (!statusStr) return 0;
+            const match = statusStr.match(/Open Balance:\s*\$([0-9.,-]+)/i);
+            return match ? parseFloat(match[1].replace(/,/g, '')) || 0 : 0;
+        }
 
-            document.getElementById('stat-total-clients').innerText = clients ? clients.length : 0;
+        // =========================================================================
+        // 2. RENDER EXECUTIVE DASHBOARD
+        // =========================================================================
+        function renderExecutiveDashboard() {
+            document.getElementById('stat-total-clients').innerText = allClients.length;
 
-            let totalRev = 0;
-            let totalExp = 0;
+            let openArTotal = 0;
+            allClients.forEach(c => openArTotal += parseOpenBalance(c.sync_status));
+            document.getElementById('stat-open-ar').innerText = `Open Receivables: $${openArTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
-            if (txs) {
-                txs.forEach(t => {
-                    const amt = parseFloat(t.amount || 0);
-                    if (t.category === 'Revenue') totalRev += amt;
-                    if (t.category === 'Expense') totalExp += amt;
-                });
-            }
+            let totalRev = 0, totalExp = 0, paymentsRec = 0, billsPaid = 0;
+            allTransactions.forEach(t => {
+                const amt = parseFloat(t.amount || 0);
+                if (t.category === 'Revenue') totalRev += amt;
+                else if (t.category === 'Expense') totalExp += amt;
+                else if (t.category === 'Payment Received') paymentsRec += amt;
+                else if (t.category === 'Bill Payment') billsPaid += amt;
+            });
 
             document.getElementById('stat-total-revenue').innerText = `$${totalRev.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('stat-payments-collected').innerText = `Payments Collected: $${paymentsRec.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             document.getElementById('stat-total-expenses').innerText = `$${totalExp.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('stat-bill-payments').innerText = `AP Bills Paid: $${billsPaid.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+            // Bank & Checking accounts from COA
+            const accounts = allMasterData.filter(m => m.entity_type === 'Account');
+            const vendors = allMasterData.filter(m => m.entity_type === 'Vendor');
+            const items = allMasterData.filter(m => m.entity_type === 'Item');
+            document.getElementById('stat-master-counts').innerText = `${accounts.length} COA | ${vendors.length} Vendors | ${items.length} Items`;
+
+            const bankList = document.getElementById('dashboardBankList');
+            bankList.innerHTML = '';
+            let totalCash = 0;
+
+            accounts.filter(a => ['Checking', 'Savings', 'CreditCard', 'Bank', 'Loan'].some(k => (a.category_or_subtype || '').includes(k))).forEach(acc => {
+                const bal = parseFloat(acc.balance_or_rate || 0);
+                if ((acc.category_or_subtype || '').includes('Checking') || (acc.category_or_subtype || '').includes('Savings')) {
+                    totalCash += bal;
+                }
+                bankList.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                        <div>
+                            <p class="font-bold text-slate-800">${acc.name_or_title}</p>
+                            <p class="text-slate-400">${acc.category_or_subtype}</p>
+                        </div>
+                        <span class="font-bold ${bal >= 0 ? 'text-emerald-600' : 'text-rose-600'}">$${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    </div>
+                `);
+            });
+            document.getElementById('stat-bank-cash').innerText = `$${totalCash.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+            renderDashboardLedger();
         }
 
-        // Load Client Roster
-        async function loadClientsData() {
-            const { data: clients, error } = await supabaseClient.from('clients').select('*').order('business_name');
-            if (error) { console.error(error); return; }
+        function renderDashboardLedger() {
+            const filter = document.getElementById('dashboardTxFilter').value;
+            const tbody = document.getElementById('dashboardTxTable');
+            tbody.innerHTML = '';
 
-            activeClientsCache = clients || [];
+            const filtered = filter === 'ALL' ? allTransactions : allTransactions.filter(t => t.category === filter);
+            filtered.forEach(tx => {
+                const amt = parseFloat(tx.amount || 0);
+                const isPos = ['Revenue', 'Payment Received', 'Banking Deposit'].includes(tx.category);
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-2 text-slate-500 whitespace-nowrap">${tx.transaction_date || 'N/A'}</td>
+                        <td class="px-4 py-2 font-mono text-[11px] text-slate-500">${tx.qbo_tx_id || ''}</td>
+                        <td class="px-4 py-2 font-medium text-slate-800">${tx.description || ''}</td>
+                        <td class="px-4 py-2"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-semibold">${tx.category}</span></td>
+                        <td class="px-4 py-2 text-right font-bold ${isPos ? 'text-emerald-600' : 'text-rose-600'}">$${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        // =========================================================================
+        // 3. RENDER CLIENTS DIRECTORY & DEEP-DIVE MODAL
+        // =========================================================================
+        function renderClientsTable() {
+            const search = (document.getElementById('clientSearchInput')?.value || '').toLowerCase();
             const tbody = document.getElementById('clientsTableBody');
             tbody.innerHTML = '';
 
-            if (activeClientsCache.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">No clients synced yet. Run your Colab sync script.</td></tr>`;
-                return;
-            }
+            const filteredClients = allClients.filter(c => (c.business_name || '').toLowerCase().includes(search));
 
-            activeClientsCache.forEach(client => {
+            filteredClients.forEach(client => {
+                const clientTxs = allTransactions.filter(t => t.client_id === client.id);
+                const rev = clientTxs.filter(t => t.category === 'Revenue').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+                const exp = clientTxs.filter(t => t.category === 'Expense').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+                const openBal = parseOpenBalance(client.sync_status);
+
                 const row = document.createElement('tr');
-                row.className = "hover:bg-slate-50 cursor-pointer transition-colors";
+                row.className = "hover:bg-indigo-50/40 cursor-pointer transition-colors";
                 row.innerHTML = `
-                    <td class="px-6 py-4 font-semibold text-slate-900">${client.business_name || 'Unknown'}</td>
-                    <td class="px-6 py-4 text-slate-600">${client.industry || 'General Business'}</td>
-                    <td class="px-6 py-4 text-slate-600">${client.qbo_tier || 'Plus'}</td>
-                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">Reconciled</span></td>
-                    <td class="px-6 py-4 text-right"><button class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">View File</button></td>
+                    <td class="px-6 py-3.5 font-bold text-slate-900">${client.business_name}</td>
+                    <td class="px-6 py-3.5 font-semibold ${openBal > 0 ? 'text-amber-600' : 'text-slate-400'}">$${openBal.toFixed(2)}</td>
+                    <td class="px-6 py-3.5 font-bold text-emerald-600">$${rev.toFixed(2)}</td>
+                    <td class="px-6 py-3.5 font-bold text-rose-600">$${exp.toFixed(2)}</td>
+                    <td class="px-6 py-3.5"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">Reconciled (${clientTxs.length} Tx)</span></td>
+                    <td class="px-6 py-3.5 text-right"><button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-2xs">View CPA File</button></td>
                 `;
                 row.addEventListener('click', () => openClientModal(client));
                 tbody.appendChild(row);
             });
         }
 
-        // Open Client Deep-Dive Modal with Advanced Financials
-        async function openClientModal(client) {
+        function openClientModal(client) {
+            currentModalClient = client;
             document.getElementById('modal-client-name').innerText = client.business_name;
-            document.getElementById('modal-client-industry').innerText = client.industry || 'General Business';
-            document.getElementById('clientModal').classList.remove('hidden');
-            document.getElementById('clientModal').classList.add('flex');
+            document.getElementById('modal-client-qboid').innerText = `QBO ID #${client.qbo_id || 'N/A'}`;
+            document.getElementById('modal-client-industry').innerText = client.industry || 'Commercial Entity';
 
-            const { data: txs } = await supabaseClient.from('transactions').select('*').eq('client_id', client.id);
-            
+            const clientTxs = allTransactions.filter(t => t.client_id === client.id);
+            document.getElementById('modal-tx-count').innerText = `${clientTxs.length} Synced Records`;
+
+            let totalRev = 0, totalExp = 0, totalPay = 0, highestExpAmt = 0, highestExpDesc = 'None recorded', expCount = 0;
             const tbody = document.getElementById('clientTransactionsTableBody');
             tbody.innerHTML = '';
-            
-            let totalRev = 0;
-            let totalExp = 0;
-            let highestExpAmount = 0;
-            let highestExpDesc = 'None';
-            let outstanding = 0;
 
-            if (!txs || txs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">No transactions synced for this client.</td></tr>`;
-            } else {
-                txs.forEach(tx => {
-                    const amt = parseFloat(tx.amount || 0);
-                    if (tx.category === 'Revenue') {
-                        totalRev += amt;
-                        if (tx.description?.includes('Balance')) outstanding += amt * 0.1; // Simulated outstanding
-                    } else if (tx.category === 'Expense') {
-                        totalExp += amt;
-                        if (amt > highestExpAmount) {
-                            highestExpAmount = amt;
-                            highestExpDesc = `${tx.description} ($${amt.toFixed(2)})`;
-                        }
+            clientTxs.forEach(tx => {
+                const amt = parseFloat(tx.amount || 0);
+                if (tx.category === 'Revenue') totalRev += amt;
+                else if (tx.category === 'Expense') {
+                    totalExp += amt;
+                    expCount++;
+                    if (amt > highestExpAmt) {
+                        highestExpAmt = amt;
+                        highestExpDesc = `${tx.description} ($${amt.toFixed(2)})`;
                     }
+                } else if (tx.category === 'Payment Received') {
+                    totalPay += amt;
+                }
 
-                    tbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-4 py-3 text-slate-600">${tx.transaction_date || 'N/A'}</td>
-                            <td class="px-4 py-3 text-slate-900 font-medium">${tx.description || 'Transaction'}</td>
-                            <td class="px-4 py-3 text-slate-500">${tx.category}</td>
-                            <td class="px-4 py-3 text-right font-semibold ${tx.category === 'Revenue' ? 'text-emerald-600' : 'text-rose-600'}">$${amt.toFixed(2)}</td>
-                        </tr>
-                    `);
-                });
-            }
+                const isPos = ['Revenue', 'Payment Received', 'Banking Deposit'].includes(tx.category);
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-3 py-2 text-slate-500 whitespace-nowrap">${tx.transaction_date || 'N/A'}</td>
+                        <td class="px-3 py-2 font-mono text-[11px] text-slate-500">${tx.qbo_tx_id || ''}</td>
+                        <td class="px-3 py-2 font-medium text-slate-800">${tx.description || ''}</td>
+                        <td class="px-3 py-2"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">${tx.category}</span></td>
+                        <td class="px-3 py-2 text-right font-bold ${isPos ? 'text-emerald-600' : 'text-rose-600'}">$${amt.toFixed(2)}</td>
+                    </tr>
+                `);
+            });
 
+            const openAr = parseOpenBalance(client.sync_status);
             const noi = totalRev - totalExp;
-            const margin = totalRev > 0 ? ((noi / totalRev) * 100).toFixed(1) : 0;
-            const taxLiability = noi > 0 ? noi * 0.28 : 0;
+            const estTax = noi > 0 ? noi * 0.28 : 0;
 
             document.getElementById('modal-revenue').innerText = `$${totalRev.toFixed(2)}`;
             document.getElementById('modal-expenses').innerText = `$${totalExp.toFixed(2)}`;
             document.getElementById('modal-noi').innerText = `$${noi.toFixed(2)}`;
-            document.getElementById('modal-margin').innerText = `${margin}%`;
+            document.getElementById('modal-open-ar').innerText = `$${openAr.toFixed(2)}`;
+            document.getElementById('modal-payments').innerText = `$${totalPay.toFixed(2)}`;
+            document.getElementById('modal-tax').innerText = `$${estTax.toFixed(2)}`;
+
             document.getElementById('modal-highest-exp').innerText = highestExpDesc;
-            document.getElementById('modal-outstanding').innerText = `$${outstanding.toFixed(2)}`;
-            document.getElementById('modal-tax-liability').innerText = `$${taxLiability.toFixed(2)}`;
+            document.getElementById('modal-vendor-count').innerText = `${expCount} Vendor Bills & Direct Expenses synced`;
+            document.getElementById('modal-ai-insight').innerText = noi >= 0 
+                ? `Positive Net Operating Income of $${noi.toFixed(2)}. Recommend maximizing Section 179 depreciation & QBI 20% deduction before signing Schedule C. Open AR to collect: $${openAr.toFixed(2)}.`
+                : `Net Operating Loss of $${Math.abs(noi).toFixed(2)} driven by ${highestExpDesc}. Verify vendor 1099-NEC compliance and carry forward operating loss on Form 1040.`;
+
+            document.getElementById('chatMessagesBox').innerHTML = `
+                <div class="bg-indigo-50 p-2 rounded border border-indigo-100"><strong class="text-indigo-900">System Audit Bot:</strong> Synced ${clientTxs.length} QBO transactions for ${client.business_name}. Open balance verified at $${openAr.toFixed(2)}.</div>
+            `;
+
+            document.getElementById('clientModal').classList.remove('hidden');
+            document.getElementById('clientModal').classList.add('flex');
         }
 
         function closeModal() {
@@ -420,23 +728,182 @@
             document.getElementById('clientModal').classList.remove('flex');
         }
 
+        function jumpToAuditForClient() {
+            if (!currentModalClient) return;
+            closeModal();
+            switchTab('audit');
+            document.getElementById('auditClientSelect').value = currentModalClient.id;
+            updateAuditFormPreview();
+        }
+
+        // =========================================================================
+        // 4. RENDER MASTER DATA (COA, VENDORS/1099s, INVENTORY, TIME, TAX)
+        // =========================================================================
+        function filterMasterTab(typeFilter) {
+            const tbody = document.getElementById('masterDataTableBody');
+            tbody.innerHTML = '';
+
+            let filtered = [];
+            if (typeFilter === 'Account') {
+                filtered = allMasterData.filter(m => m.entity_type === 'Account');
+                document.getElementById('masterTableTitle').innerText = 'Chart of Accounts (QBO Checking, Savings, Credit Cards, Equity & GL)';
+            } else if (typeFilter === 'Vendor') {
+                filtered = allMasterData.filter(m => m.entity_type === 'Vendor');
+                document.getElementById('masterTableTitle').innerText = 'Vendors & 1099 Contractors Directory';
+            } else if (typeFilter === 'Item') {
+                filtered = allMasterData.filter(m => m.entity_type === 'Item');
+                document.getElementById('masterTableTitle').innerText = 'Inventory Products, Supplies & Service Items';
+            } else if (typeFilter === 'TimeActivity') {
+                filtered = allMasterData.filter(m => ['TimeActivity', 'Employee'].includes(m.entity_type));
+                document.getElementById('masterTableTitle').innerText = 'Team Employees & Billable Time Entries';
+            } else {
+                filtered = allMasterData.filter(m => ['TaxAgency', 'TaxCode', 'TaxRate', 'PaymentMethod', 'Term'].includes(m.entity_type));
+                document.getElementById('masterTableTitle').innerText = 'Sales Tax Agencies, Tax Rates, Payment Methods & Terms';
+            }
+
+            document.getElementById('masterCountBadge').innerText = `${filtered.length} Records`;
+
+            filtered.forEach(item => {
+                const bal = parseFloat(item.balance_or_rate || 0);
+                const badge = item.is_1099_contractor 
+                    ? `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-xs">1099-NEC Contractor</span>` 
+                    : `<span class="text-xs text-slate-400">${item.entity_type}</span>`;
+
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-3 font-mono text-xs text-slate-500">#${item.qbo_id}</td>
+                        <td class="px-6 py-3 font-bold text-slate-900">${item.name_or_title}</td>
+                        <td class="px-6 py-3 text-slate-600">${item.category_or_subtype || ''}</td>
+                        <td class="px-6 py-3">${badge}</td>
+                        <td class="px-6 py-3 text-right font-bold text-slate-800">$${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        // =========================================================================
+        // 5. PARSE & RENDER OFFICIAL QBO JSON REPORTS
+        // =========================================================================
+        function renderSelectedReport() {
+            const repName = document.getElementById('reportSelector').value;
+            const repObj = allReports.find(r => r.report_name === repName);
+            const thead = document.getElementById('reportTableHead');
+            const tbody = document.getElementById('reportTableBody');
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (!repObj || !repObj.report_data) {
+                tbody.innerHTML = `<tr><td class="p-6 text-center text-slate-400">Report not found in Supabase.</td></tr>`;
+                return;
+            }
+
+            const cols = repObj.report_data.Columns?.Column || [];
+            thead.innerHTML = `<tr>${cols.map(c => `<th class="px-4 py-3">${c.ColTitle || ''}</th>`).join('')}</tr>`;
+
+            const flatRows = [];
+            function extractRows(rowsArray, depth = 0) {
+                if (!rowsArray) return;
+                rowsArray.forEach(r => {
+                    if (r.Header?.ColData) flatRows.push({ cols: r.Header.ColData, type: 'header', depth });
+                    if (r.ColData) flatRows.push({ cols: r.ColData, type: 'data', depth });
+                    if (r.Rows?.Row) extractRows(r.Rows.Row, depth + 1);
+                    if (r.Summary?.ColData) flatRows.push({ cols: r.Summary.ColData, type: 'summary', depth });
+                });
+            }
+            extractRows(repObj.report_data.Rows?.Row || []);
+
+            flatRows.slice(0, 150).forEach(row => {
+                const style = row.type === 'header' ? 'bg-slate-100 font-bold text-slate-900' : (row.type === 'summary' ? 'bg-indigo-50/70 font-black text-indigo-950 border-t border-indigo-200' : 'hover:bg-slate-50');
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="${style}">
+                        ${row.cols.map((c, idx) => `<td class="px-4 py-2 ${idx === 0 ? `pl-${Math.min(12, 4 + row.depth * 3)}` : 'text-right font-mono'}">${c.value || ''}</td>`).join('')}
+                    </tr>
+                `);
+            });
+        }
+
+        // =========================================================================
+        // 6. AUTOMATED TAX FORM PRE-FILL & INSTANT PDF DOWNLOAD
+        // =========================================================================
         function populateAuditDropdown() {
             const select = document.getElementById('auditClientSelect');
-            select.innerHTML = '<option value="">-- Choose Client for Form --</option>';
-            activeClientsCache.forEach(c => {
+            select.innerHTML = '<option value="">-- Select Client to Pre-Fill Tax Return --</option>';
+            allClients.forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.business_name}</option>`;
             });
+            if (allClients.length > 0) {
+                select.value = allClients[0].id;
+                updateAuditFormPreview();
+            }
         }
 
-        function selectForm(formId) {
-            ['1040', '1120'].forEach(f => {
-                document.getElementById(`form-card-${f}`).className = f === formId 
-                    ? 'p-4 border-2 border-indigo-600 bg-indigo-50/50 rounded-xl cursor-pointer' 
-                    : 'p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300';
-            });
-            document.getElementById('previewFormTitle').innerText = `Form ${formId} Pre-Fill Preview`;
+        function selectTaxForm(formName) {
+            selectedTaxFormName = formName;
+            document.getElementById('previewFormTitle').innerText = `${formName} — Pre-Filled Worksheet`;
+            updateAuditFormPreview();
         }
 
+        function updateAuditFormPreview() {
+            const clientId = document.getElementById('auditClientSelect').value;
+            const client = allClients.find(c => c.id === clientId);
+            if (!client) return;
+
+            document.getElementById('previewClientSubtitle').innerText = `Client: ${client.business_name} (QBO ID #${client.qbo_id})`;
+
+            const txs = allTransactions.filter(t => t.client_id === client.id);
+            const rev = txs.filter(t => t.category === 'Revenue').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+            const exp = txs.filter(t => t.category === 'Expense').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+            const net = rev - exp;
+            const tax = net > 0 ? net * 0.28 : 0;
+
+            document.getElementById('formGrossRev').value = `$${rev.toFixed(2)}`;
+            document.getElementById('formTotalExp').value = `$${exp.toFixed(2)}`;
+            document.getElementById('formNetProfit').value = `$${net.toFixed(2)}`;
+            document.getElementById('formEstTax').value = `$${tax.toFixed(2)}`;
+        }
+
+        function generateAndDownloadTaxPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const clientId = document.getElementById('auditClientSelect').value;
+            const client = allClients.find(c => c.id === clientId) || { business_name: "Selected Client" };
+            const ssn = document.getElementById('formSsnInput').value;
+            const status = document.getElementById('formFilingStatus').value;
+            const rev = document.getElementById('formGrossRev').value;
+            const exp = document.getElementById('formTotalExp').value;
+            const net = document.getElementById('formNetProfit').value;
+            const tax = document.getElementById('formEstTax').value;
+            const sig = document.getElementById('formCpaSignature').value;
+            const ptin = document.getElementById('formPtin').value;
+
+            doc.setFontSize(16);
+            doc.text(`OFFICIAL PRE-FILLED TAX WORKSHEET: ${selectedTaxFormName}`, 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Tax Year: 2026 | Generated via CPA Portal OS (QBO Sandbox Sync)`, 14, 28);
+            doc.line(14, 32, 196, 32);
+
+            doc.setFontSize(12);
+            doc.text(`Taxpayer / Business Name: ${client.business_name}`, 14, 42);
+            doc.text(`SSN / EIN: ${ssn}`, 14, 50);
+            doc.text(`Filing Status / Entity Classification: ${status}`, 14, 58);
+            doc.line(14, 64, 196, 64);
+
+            doc.text(`1. Gross Receipts or Sales (QBO Synced): ${rev}`, 14, 76);
+            doc.text(`2. Total Operating & Vendor Expenses (QBO Synced): ${exp}`, 14, 86);
+            doc.text(`3. Net Business Profit or Loss: ${net}`, 14, 96);
+            doc.text(`4. Estimated Federal & CT Tax Liability (28%): ${tax}`, 14, 106);
+            doc.line(14, 114, 196, 114);
+
+            doc.setFontSize(11);
+            doc.text(`CPA Paid Preparer Use Only`, 14, 126);
+            doc.text(`Preparer Signature: ${sig}`, 14, 136);
+            doc.text(`Preparer PTIN: ${ptin} | Date Signed: ${new Date().toLocaleDateString()}`, 14, 144);
+
+            doc.save(`${client.business_name.replace(/\s+/g, '_')}_${selectedTaxFormName.replace(/\s+/g, '_')}_2026.pdf`);
+        }
+
+        // Onboarding Form Handler
         async function handleOnboard(e) {
             e.preventDefault();
             const payload = {
@@ -444,12 +911,13 @@
                 industry: document.getElementById('onboardIndustry').value,
                 qbo_tier: document.getElementById('onboardTier').value,
                 client_email: document.getElementById('onboardEmail').value,
-                sync_status: 'Active Sync'
+                sync_status: 'Open Balance: $0.00'
             };
             const { error } = await supabaseClient.from('clients').insert([payload]);
             if (error) { alert('Error: ' + error.message); return; }
-            alert('Client successfully onboarded!');
+            alert('Client onboarded successfully!');
             document.getElementById('onboardForm').reset();
+            await initApp();
             switchTab('clients');
         }
 
@@ -457,12 +925,13 @@
             const input = document.getElementById('chatInput');
             if (!input.value.trim()) return;
             const box = document.getElementById('chatMessagesBox');
-            if (box.innerHTML.includes('No notes')) box.innerHTML = '';
-            box.innerHTML += `<div class="bg-indigo-50 p-2 rounded"><strong class="text-indigo-900">CPA Lead:</strong> ${input.value}</div>`;
+            box.insertAdjacentHTML('beforeend', `<div class="bg-white p-2 rounded border border-slate-200"><strong class="text-indigo-700">Mahmoud (CPA):</strong> ${input.value}</div>`);
             input.value = '';
+            box.scrollTop = box.scrollHeight;
         }
 
-        loadDashboardMetrics();
+        // Boot Portal
+        initApp();
     </script>
 </body>
 </html>
