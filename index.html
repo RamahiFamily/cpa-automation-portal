@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN for Financial Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -58,14 +60,13 @@
 
         <!-- Main Content Area -->
         <main class="flex-1 flex flex-col overflow-y-auto">
-            <!-- Top Bar with Global Period Dropdown -->
+            <!-- Top Bar -->
             <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
                 <div class="flex items-center space-x-4">
                     <button class="md:hidden text-gray-600 hover:text-gray-900"><i class="fa-solid fa-bars text-xl"></i></button>
                     <h2 id="header-title" class="text-xl font-bold text-gray-800">Firm Overview Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <!-- Period Filter Dropdown -->
                     <div class="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
                         <span class="text-xs font-semibold text-gray-500 uppercase">Period:</span>
                         <select id="global-period" onchange="handlePeriodChange(this.value)" class="bg-transparent text-sm font-medium text-gray-800 focus:outline-none cursor-pointer">
@@ -76,7 +77,7 @@
                     </div>
                     <div class="flex items-center space-x-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span class="font-medium">QBO & Supabase Synced</span>
+                        <span class="font-medium">Supabase & QBO Synced</span>
                     </div>
                 </div>
             </header>
@@ -86,12 +87,11 @@
 
                 <!-- VIEW 1: DASHBOARD -->
                 <section id="view-dashboard" class="space-y-6">
-                    <!-- KPI Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Active Business Clients</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">24</p>
-                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> +2 this month</span>
+                            <p id="active-clients-count" class="text-3xl font-bold text-gray-900 mt-2">--</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> Live from Supabase</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (MTD)</p>
@@ -110,7 +110,6 @@
                         </div>
                     </div>
 
-                    <!-- Chart & Quick Summary Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
                             <h3 class="text-base font-bold text-gray-800 mb-4">Firm-Wide Revenue vs. Expenses</h3>
@@ -130,13 +129,9 @@
                                         <span class="font-medium text-gray-700">Express Plumbing LLC</span>
                                         <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 14m ago</span>
                                     </div>
-                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <div class="flex justify-between items-center pb-2">
                                         <span class="font-medium text-gray-700">Downtown Bistro</span>
                                         <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Pending CDC</span>
-                                    </div>
-                                    <div class="flex justify-between items-center pb-2">
-                                        <span class="font-medium text-gray-700">CT Rideshare Fleet</span>
-                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 1h ago</span>
                                     </div>
                                 </div>
                             </div>
@@ -152,7 +147,7 @@
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-bold text-gray-800">Client Roster</h3>
+                                <h3 class="text-lg font-bold text-gray-800">Client Roster (Loaded from Supabase)</h3>
                                 <p class="text-xs text-gray-500">Click any client row to view detailed filings, expenses, and Chart of Accounts.</p>
                             </div>
                             <button onclick="switchTab('onboard')" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
@@ -170,211 +165,34 @@
                                         <th class="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 text-sm">
-                                    <tr onclick="openClientDetail('Metro Gas Station #4', 'Gas Station / Convenience', 'Advanced')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
-                                        <td class="px-6 py-4 font-semibold text-gray-900">Metro Gas Station #4</td>
-                                        <td class="px-6 py-4 text-gray-600">Gas Station</td>
-                                        <td class="px-6 py-4 text-gray-600">Advanced</td>
-                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
-                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
-                                    </tr>
-                                    <tr onclick="openClientDetail('Express Plumbing LLC', 'Plumbing & Contracting', 'Essentials')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
-                                        <td class="px-6 py-4 font-semibold text-gray-900">Express Plumbing LLC</td>
-                                        <td class="px-6 py-4 text-gray-600">Plumber (Cash/Invoice)</td>
-                                        <td class="px-6 py-4 text-gray-600">Essentials</td>
-                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
-                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
-                                    </tr>
-                                    <tr onclick="openClientDetail('Downtown Bistro', 'Restaurant & Bar', 'Plus')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
-                                        <td class="px-6 py-4 font-semibold text-gray-900">Downtown Bistro</td>
-                                        <td class="px-6 py-4 text-gray-600">Restaurant</td>
-                                        <td class="px-6 py-4 text-gray-600">Plus</td>
-                                        <td class="px-6 py-4"><span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-medium">Token Refresh Due</span></td>
-                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
-                                    </tr>
-                                    <tr onclick="openClientDetail('CT Rideshare Fleet', 'Transportation & Delivery', 'Simple Start')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
-                                        <td class="px-6 py-4 font-semibold text-gray-900">CT Rideshare Fleet</td>
-                                        <td class="px-6 py-4 text-gray-600">Rideshare Driver</td>
-                                        <td class="px-6 py-4 text-gray-600">Simple Start</td>
-                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
-                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
-                                    </tr>
+                                <tbody id="client-table-body" class="divide-y divide-gray-200 text-sm">
+                                    <!-- Populated dynamically via Supabase -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
 
-                <!-- VIEW 2.5: INDIVIDUAL CLIENT DEEP DIVE (Hidden by default) -->
+                <!-- VIEW 2.5: INDIVIDUAL CLIENT DEEP DIVE -->
                 <section id="view-client-detail" class="hidden space-y-6">
-                    <div class="flex items-center justify-between">
-                        <button onclick="switchTab('clients')" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-2">
-                            <i class="fa-solid fa-arrow-left"></i>
-                            <span>Back to Client Roster</span>
-                        </button>
-                        <div class="space-x-2">
-                            <button onclick="alert('Exporting CPA workpapers & trial balance CSV...')" class="bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-800">
-                                <i class="fa-solid fa-download mr-1.5"></i>Export Workpapers
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Client Header Card -->
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <button onclick="switchTab('clients')" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back to Client Roster</span>
+                    </button>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
                         <div>
-                            <span id="detail-badge" class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Gas Station</span>
-                            <h2 id="detail-name" class="text-2xl font-bold text-gray-900 mt-1">Metro Gas Station #4</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">QuickBooks Online Tier: <span id="detail-tier" class="font-semibold text-gray-700">Advanced</span> | Last CDC Sync: Today, 08:30 AM</p>
-                        </div>
-                        <div class="flex space-x-3">
-                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 text-right">
-                                <p class="text-[10px] text-gray-500 uppercase font-semibold">Net P&L (Selected Period)</p>
-                                <p class="text-lg font-bold text-green-600">$42,850.00</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Client Financial & Tax Sub-Tabs -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left 2 Cols: Expenses, Chart of Accounts & Filings -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- Expenses & Financial Breakdown -->
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <h3 class="text-base font-bold text-gray-800 mb-4">Expenses & Operating Breakdown</h3>
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                        <span class="font-medium text-gray-700">Cost of Goods Sold (COGS - Fuel/Inventory)</span>
-                                        <span class="font-bold text-gray-900">$184,200.00</span>
-                                    </div>
-                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                        <span class="font-medium text-gray-700">Payroll & Contractor Expenses</span>
-                                        <span class="font-bold text-gray-900">$18,400.00</span>
-                                    </div>
-                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                        <span class="font-medium text-gray-700">Utilities & Facility Maintenance</span>
-                                        <span class="font-bold text-gray-900">$4,250.00</span>
-                                    </div>
-                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                        <span class="font-medium text-gray-700">State Sales Tax Remittance (CT OS-114)</span>
-                                        <span class="font-bold text-gray-900">$6,820.00</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Chart of Accounts Snapshot -->
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <h3 class="text-base font-bold text-gray-800 mb-4">QBO Chart of Accounts</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left text-sm">
-                                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-                                            <tr>
-                                                <th class="px-4 py-3">Account #</th>
-                                                <th class="px-4 py-3">Account Name</th>
-                                                <th class="px-4 py-3">Type</th>
-                                                <th class="px-4 py-3 text-right">Balance</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200 text-xs">
-                                            <tr>
-                                                <td class="px-4 py-3 font-mono">1010</td>
-                                                <td class="px-4 py-3 font-medium">Operating Checking Account</td>
-                                                <td class="px-4 py-3 text-gray-500">Bank</td>
-                                                <td class="px-4 py-3 text-right font-bold">$68,400.10</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-4 py-3 font-mono">1200</td>
-                                                <td class="px-4 py-3 font-medium">Accounts Receivable (A/R)</td>
-                                                <td class="px-4 py-3 text-gray-500">Current Asset</td>
-                                                <td class="px-4 py-3 text-right font-bold">$12,350.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-4 py-3 font-mono">2000</td>
-                                                <td class="px-4 py-3 font-medium">Accounts Payable (A/P)</td>
-                                                <td class="px-4 py-3 text-gray-500">Current Liability</td>
-                                                <td class="px-4 py-3 text-right font-bold">$9,100.00</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Col: Tax Preparation & CPA Notes -->
-                        <div class="space-y-6">
-                            <!-- Tax Filing Data -->
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <h3 class="text-base font-bold text-gray-800 mb-4">Tax Filing Prep</h3>
-                                <div class="space-y-3 text-sm">
-                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <p class="text-xs font-semibold text-blue-800 uppercase">Filing Status</p>
-                                        <p class="text-sm font-bold text-blue-900 mt-0.5">Ready for CPA Review</p>
-                                    </div>
-                                    <div class="p-3 bg-gray-50 rounded-lg">
-                                        <p class="text-xs text-gray-500 font-semibold">Estimated Federal Liability</p>
-                                        <p class="text-base font-bold text-gray-800">$8,940.00</p>
-                                    </div>
-                                    <button onclick="alert('Filing package verified & locked for CPA submission.')" class="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-colors">
-                                        Approve & Lock Return
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- CPA Firm Internal Notes -->
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <h3 class="text-base font-bold text-gray-800 mb-4">CPA Firm Notes</h3>
-                                <textarea class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Add internal review notes or audit reminders here...">Client reconciled inventory logs with fuel distributor invoices. No material variances found.</textarea>
-                                <button onclick="alert('Note saved to Supabase audit log.')" class="mt-3 w-full bg-slate-900 text-white text-xs font-semibold py-2 rounded-lg hover:bg-slate-800">
-                                    Save Note
-                                </button>
-                            </div>
+                            <span id="detail-badge" class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Industry</span>
+                            <h2 id="detail-name" class="text-2xl font-bold text-gray-900 mt-1">Client Name</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">QuickBooks Online Tier: <span id="detail-tier" class="font-semibold text-gray-700">Tier</span></p>
                         </div>
                     </div>
                 </section>
 
-                <!-- VIEW 3: FILINGS & AUDIT CENTER -->
+                <!-- VIEW 3: FILINGS & AUDIT -->
                 <section id="view-filings" class="hidden space-y-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Filings Section -->
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">Compliance Filings Schedule</h3>
-                            <div class="space-y-4">
-                                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center">
-                                    <div>
-                                        <p class="font-bold text-gray-900 text-sm">CT Sales & Use Tax (OS-114)</p>
-                                        <p class="text-xs text-gray-500">Metro Gas Station #4 • Due Oct 31, 2026</p>
-                                    </div>
-                                    <span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-medium">Due Soon</span>
-                                </div>
-                                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center">
-                                    <div>
-                                        <p class="font-bold text-gray-900 text-sm">Federal Quarterly Estimate (1120-W)</p>
-                                        <p class="text-xs text-gray-500">Express Plumbing LLC • Due Dec 15, 2026</p>
-                                    </div>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Prepared</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Audit Center -->
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">Audit Center & Anomaly Detection</h3>
-                            <div class="space-y-4">
-                                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                                    <div class="flex items-center space-x-2 text-red-700 font-bold text-sm">
-                                        <i class="fa-solid fa-triangle-exclamation"></i>
-                                        <span>Unusual Expense Spike Flagged</span>
-                                    </div>
-                                    <p class="text-xs text-red-600 mt-1">Downtown Bistro reported a 45% increase in miscellaneous expenses without corresponding revenue growth.</p>
-                                </div>
-                                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                                    <div class="flex items-center space-x-2 text-amber-700 font-bold text-sm">
-                                        <i class="fa-solid fa-circle-exclamation"></i>
-                                        <span>Missing Receipt Attachment</span>
-                                    </div>
-                                    <p class="text-xs text-amber-600 mt-1">Express Plumbing LLC has 2 transactions over $500 missing required OCR receipt verification.</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Compliance Filings Schedule</h3>
+                        <p class="text-sm text-gray-600">Audit monitoring and tax filing modules connected to active Supabase entities.</p>
                     </div>
                 </section>
 
@@ -382,26 +200,26 @@
                 <section id="view-onboard" class="hidden space-y-6">
                     <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
                         <h3 class="text-xl font-bold text-gray-800 mb-2">Onboard New Business Client</h3>
-                        <p class="text-xs text-gray-500 mb-6">Initialize a new client profile and trigger the secure Intuit OAuth connection link.</p>
+                        <p class="text-xs text-gray-500 mb-6">Initialize a new client profile and save directly to Supabase.</p>
                         
-                        <form onsubmit="event.preventDefault(); alert('Client profile created in Supabase! OAuth connection invite sent.'); switchTab('clients');" class="space-y-4">
+                        <form id="onboard-form" onsubmit="handleClientOnboarding(event)" class="space-y-4">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Business Legal Name</label>
-                                <input type="text" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., New England Restaurant Group LLC">
+                                <input type="text" id="onboard-name" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., New England Group LLC">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Industry Profile</label>
-                                    <select class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <select id="onboard-industry" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option>Gas Station / Convenience</option>
-                                        <option>Cash-Only Plumber / Contractor</option>
-                                        <option>Restaurant / Hospitality</option>
+                                        <option>Plumbing & Contracting</option>
+                                        <option>Restaurant & Bar</option>
                                         <option>Rideshare / Delivery Fleet</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">QuickBooks Edition</label>
-                                    <select class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <select id="onboard-tier" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option>Simple Start</option>
                                         <option>Essentials</option>
                                         <option>Plus</option>
@@ -410,11 +228,11 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Client Email (For QBO OAuth Authorization)</label>
-                                <input type="email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@businessdomain.com">
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Client Email</label>
+                                <input type="email" id="onboard-email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@businessdomain.com">
                             </div>
                             <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                Generate QBO Connect Link & Initialize Profile
+                                Save to Supabase & Generate QBO Link
                             </button>
                         </form>
                     </div>
@@ -424,17 +242,74 @@
         </main>
     </div>
 
-    <!-- JavaScript Controller Logic -->
+    <!-- JavaScript Controller & Supabase Integration -->
     <script>
+        // Initialize Supabase Client
+        const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let revenueChartInstance = null;
 
+        async function loadClientsData() {
+            try {
+                const { data: clients, error } = await supabase
+                    .from('clients')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                document.getElementById('active-clients-count').innerText = clients.length;
+
+                const tableBody = document.getElementById('client-table-body');
+                tableBody.innerHTML = '';
+
+                clients.forEach(client => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-blue-50/50 cursor-pointer transition-colors';
+                    row.setAttribute('onclick', `openClientDetail('${client.business_name}', '${client.industry}', '${client.qbo_tier}')`);
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-semibold text-gray-900">${client.business_name}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.industry}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.qbo_tier}</td>
+                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">${client.sync_status || 'Active Sync'}</span></td>
+                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error fetching clients from Supabase:', err.message);
+            }
+        }
+
+        async function handleClientOnboarding(event) {
+            event.preventDefault();
+            
+            const businessName = document.getElementById('onboard-name').value;
+            const industry = document.getElementById('onboard-industry').value;
+            const qboTier = document.getElementById('onboard-tier').value;
+            const email = document.getElementById('onboard-email').value;
+
+            const { error } = await supabase
+                .from('clients')
+                .insert([{ business_name: businessName, industry: industry, qbo_tier: qboTier, client_email: email, sync_status: 'Pending OAuth' }]);
+
+            if (error) {
+                alert('Error saving client: ' + error.message);
+            } else {
+                alert('Client profile created in Supabase successfully!');
+                document.getElementById('onboard-form').reset();
+                switchTab('clients');
+                loadClientsData();
+            }
+        }
+
         function switchTab(tabId) {
-            // Hide all views
             ['dashboard', 'clients', 'client-detail', 'filings', 'onboard'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
             });
-
-            // Remove active styles from sidebar nav buttons
             ['dashboard', 'clients', 'filings', 'onboard'].forEach(n => {
                 const btn = document.getElementById(`nav-${n}`);
                 if(btn) {
@@ -443,10 +318,8 @@
                 }
             });
 
-            // Show selected view
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
-            // Highlight nav button if applicable
             if(['dashboard', 'clients', 'filings', 'onboard'].includes(tabId)) {
                 const activeBtn = document.getElementById(`nav-${tabId}`);
                 if(activeBtn) {
@@ -455,19 +328,8 @@
                 }
             }
 
-            // Update header title
-            const titles = {
-                'dashboard': 'Firm Overview Dashboard',
-                'clients': 'Client Roster & Accounts',
-                'client-detail': 'Client Financial File & Tax Prep',
-                'filings': 'Compliance Filings & Audit Center',
-                'onboard': 'Onboard New Business Client'
-            };
-            document.getElementById('header-title').innerText = titles[tabId] || 'CPA Portal';
-
-            // Init chart if dashboard is shown
             if(tabId === 'dashboard' && !revenueChartInstance) {
-                initChart('monthly');
+                initChart();
             }
         }
 
@@ -478,64 +340,29 @@
             switchTab('client-detail');
         }
 
-        function handlePeriodChange(period) {
-            // Re-render chart or update KPI numbers based on dropdown selection (Monthly / Quarterly / Annually)
-            if(revenueChartInstance) {
-                if(period === 'monthly') {
-                    revenueChartInstance.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                    revenueChartInstance.data.datasets[0].data = [110000, 125000, 118000, 129900];
-                    revenueChartInstance.data.datasets[1].data = [82000, 91000, 85000, 94000];
-                } else if(period === 'quarterly') {
-                    revenueChartInstance.data.labels = ['Month 1', 'Month 2', 'Month 3'];
-                    revenueChartInstance.data.datasets[0].data = [450000, 480000, 482900];
-                    revenueChartInstance.data.datasets[1].data = [340000, 360000, 355000];
-                } else {
-                    revenueChartInstance.data.labels = ['Q1', 'Q2', 'Q3', 'Q4'];
-                    revenueChartInstance.data.datasets[0].data = [1350000, 1420000, 1390000, 1482900];
-                    revenueChartInstance.data.datasets[1].data = [1020000, 1080000, 1050000, 1110000];
-                }
-                revenueChartInstance.update();
-            }
-        }
-
-        function initChart(period) {
+        function initChart() {
             const ctx = document.getElementById('revenueChart').getContext('2d');
             revenueChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
                     datasets: [
-                        {
-                            label: 'Revenue ($)',
-                            data: [110000, 125000, 118000, 129900],
-                            backgroundColor: '#2563eb',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'Expenses ($)',
-                            data: [82000, 91000, 85000, 94000],
-                            backgroundColor: '#94a3b8',
-                            borderRadius: 6
-                        }
+                        { label: 'Revenue ($)', data: [110000, 125000, 118000, 129900], backgroundColor: '#2563eb', borderRadius: 6 },
+                        { label: 'Expenses ($)', data: [82000, 91000, 85000, 94000], backgroundColor: '#94a3b8', borderRadius: 6 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
-                        x: { grid: { display: false } }
-                    }
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        // Initialize chart on load
         window.onload = () => {
-            initChart('monthly');
+            initChart();
+            loadClientsData();
         };
     </script>
 </body>
