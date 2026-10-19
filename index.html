@@ -175,6 +175,29 @@
                             <p class="text-xs text-gray-500 mt-0.5">QuickBooks Online Tier: <span id="detail-tier" class="font-semibold text-gray-700">Tier</span></p>
                         </div>
                     </div>
+
+                    <!-- Transactions panel for selected client -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-bold text-gray-800">Recent Transactions</h3>
+                            <div class="text-sm text-gray-600">Total: <span id="modalTotalRevenue" class="font-semibold text-gray-800">$0.00</span></div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-4 py-3">Date</th>
+                                        <th class="px-4 py-3">Description</th>
+                                        <th class="px-4 py-3">Amount</th>
+                                        <th class="px-4 py-3">Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientTransactionsTableBody" class="divide-y divide-gray-100 text-sm">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- VIEW 3: FILINGS & AUDIT -->
@@ -194,7 +217,7 @@
                         <form id="onboard-form" onsubmit="handleClientOnboarding(event)" class="space-y-4">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Business Legal Name</label>
-                                <input type="text" id="onboard-name" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., New England Group LLC">
+                                <input type="text" id="onboard-name" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Acme LLC">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -218,9 +241,9 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Client Email</label>
-                                <input type="email" id="onboard-email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@businessdomain.com">
+                                <input type="email" id="onboard-email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@business.com">
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                            <button type="submit" class="w-full:bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm">
                                 Save to Supabase & Generate QBO Link
                             </button>
                         </form>
@@ -237,7 +260,7 @@
         // CONFIGURATION & CREDENTIALS BLOCK
         // ==============================================================================
         const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.[...]';
         // ==============================================================================
 
         let supabaseClient = null;
@@ -249,6 +272,8 @@
         }
 
         let revenueChartInstance = null;
+        // Track the active client UUID globally
+        let selectedClientId = null;
 
         // Load Dynamic Dashboard Metrics & Webhook Logs with Error Logging
         async function loadDashboardData() {
@@ -334,6 +359,7 @@
             }
         }
 
+        // Render clients list with safe event listeners
         async function loadClientsData() {
             if (!supabaseClient) return;
             try {
@@ -350,18 +376,20 @@
                 const tableBody = document.getElementById('client-table-body');
                 tableBody.innerHTML = '';
 
-                clients.forEach(client => {
+                (clients || []).forEach(client => {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-blue-50/50 cursor-pointer transition-colors';
-                    row.setAttribute('onclick', `openClientDetail('${client.business_name}', '${client.industry}', '${client.qbo_tier}')`);
-                    
+
                     row.innerHTML = `
-                        <td class="px-6 py-4 font-semibold text-gray-900">${client.business_name}</td>
-                        <td class="px-6 py-4 text-gray-600">${client.industry}</td>
-                        <td class="px-6 py-4 text-gray-600">${client.qbo_tier}</td>
+                        <td class="px-6 py-4 font-semibold text-gray-900">${client.business_name || ''}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.industry || ''}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.qbo_tier || ''}</td>
                         <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">${client.sync_status || 'Active Sync'}</span></td>
                         <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
                     `;
+
+                    // Bind a safe click handler that captures the client object
+                    row.addEventListener('click', () => openClientDetail(client));
                     tableBody.appendChild(row);
                 });
             } catch (err) {
@@ -436,11 +464,92 @@
             }
         }
 
-        function openClientDetail(name, profile, tier) {
-            document.getElementById('detail-name').innerText = name;
-            document.getElementById('detail-badge').innerText = profile;
-            document.getElementById('detail-tier').innerText = tier;
+        // Open client detail using the full client object, track UUID, and load related data
+        function openClientDetail(client) {
+            if (!client) return;
+
+            // Store the Supabase UUID for use in filtered queries
+            selectedClientId = client.id || null;
+
+            document.getElementById('detail-name').innerText = client.business_name || 'Client Name';
+            document.getElementById('detail-badge').innerText = client.industry || 'Industry';
+            document.getElementById('detail-tier').innerText = client.qbo_tier || 'Tier';
+
             switchTab('client-detail');
+
+            // Load client-specific datasets using the UUID
+            loadClientTransactions(selectedClientId);
+            // Additional loaders can be added here that use selectedClientId
+            // e.g. loadClientFilings(selectedClientId);
+        }
+
+        // Fetch and render transactions filtered by client UUID
+        async function loadClientTransactions(clientId) {
+            if (!supabaseClient) {
+                console.warn('Supabase client not initialized.');
+                return;
+            }
+            if (!clientId) {
+                console.warn('No client ID provided for transaction query.');
+                // Clear transactions UI
+                renderTransactionTable([]);
+                return;
+            }
+
+            try {
+                const { data: transactions, error } = await supabaseClient
+                    .from('transactions')
+                    .select('*')
+                    .eq('client_id', clientId)
+                    .order('transaction_date', { ascending: false });
+
+                if (error) {
+                    console.error("Error loading client transactions:", error.message || error);
+                    renderTransactionTable([]);
+                    return;
+                }
+
+                renderTransactionTable(transactions || []);
+            } catch (err) {
+                console.error('Error loading client transactions:', err);
+                renderTransactionTable([]);
+            }
+        }
+
+        // Render transaction rows inside the client-detail view
+        function renderTransactionTable(transactions) {
+            const tableBody = document.getElementById('clientTransactionsTableBody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '';
+
+            if (!transactions || transactions.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-sm text-gray-500">No synced invoices found for this client.</td></tr>`;
+                const totalElemEmpty = document.getElementById('modalTotalRevenue');
+                if (totalElemEmpty) totalElemEmpty.innerText = '$0.00';
+                return;
+            }
+
+            let totalRevenue = 0;
+            transactions.forEach(tx => {
+                const amt = parseFloat(tx.amount || 0);
+                totalRevenue += amt;
+
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-700">${tx.transaction_date || 'N/A'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900">${tx.description || 'Invoice Payment'}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-green-600">$${amt.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">${tx.category || 'Revenue'}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            const totalElem = document.getElementById('modalTotalRevenue');
+            if (totalElem) {
+                totalElem.innerText = `$${totalRevenue.toFixed(2)}`;
+            }
         }
 
         function initChart() {
