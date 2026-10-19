@@ -1,158 +1,405 @@
-<script>
-    // Initialize Supabase Client (Replace with your keys when ready)
-    const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0';
-    
-    let supabaseClient = null;
-    try {
-        if (SUPABASE_URL !== 'YOUR_SUPABASE_PROJECT_URL') {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-    } catch (e) {
-        console.warn('Supabase not initialized yet:', e);
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPA Firm & Tax Automation Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for Financial Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-    let revenueChartInstance = null;
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex border-r border-slate-800">
+            <div>
+                <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+                    <div class="bg-blue-600 text-white p-2 rounded-lg font-bold">
+                        <i class="fa-solid fa-calculator text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-white font-bold text-base leading-tight">CPA Back-Office</h1>
+                        <span class="text-xs text-slate-400">Tax & Automation Portal</span>
+                    </div>
+                </div>
+                <nav class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium bg-blue-600 text-white transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('clients')" id="nav-clients" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-users w-5"></i>
+                        <span>Clients</span>
+                    </button>
+                    <button onclick="switchTab('filings')" id="nav-filings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-file-invoice-dollar w-5"></i>
+                        <span>Filings & Audit</span>
+                    </button>
+                    <button onclick="switchTab('onboard')" id="nav-onboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-user-plus w-5"></i>
+                        <span>Onboard New Client</span>
+                    </button>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center space-x-3 px-4 py-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">M</div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-semibold text-white truncate">Mahmoud Alramahi</p>
+                        <p class="text-[10px] text-slate-400 truncate">FP&A Manager / CPA Admin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-    // Load Clients from Supabase (or fallback gracefully)
-    async function loadClientsData() {
-        if (!supabaseClient) {
-            console.log('Using mock client data until Supabase keys are configured.');
-            return;
-        }
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center space-x-4">
+                    <button class="md:hidden text-gray-600 hover:text-gray-900"><i class="fa-solid fa-bars text-xl"></i></button>
+                    <h2 id="header-title" class="text-xl font-bold text-gray-800">Firm Overview Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Period:</span>
+                        <select id="global-period" onchange="handlePeriodChange(this.value)" class="bg-transparent text-sm font-medium text-gray-800 focus:outline-none cursor-pointer">
+                            <option value="monthly">Monthly (Current)</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annually">Annually</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="font-medium">Supabase & QBO Synced</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Container -->
+            <div class="p-8 max-w-7xl mx-auto w-full">
+
+                <!-- VIEW 1: DASHBOARD -->
+                <section id="view-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Active Business Clients</p>
+                            <p id="active-clients-count" class="text-3xl font-bold text-gray-900 mt-2">--</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> Live from Supabase</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (MTD)</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">$482,900</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> +12.4% vs last period</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Pending Tax Filings</p>
+                            <p class="text-3xl font-bold text-amber-600 mt-2">5</p>
+                            <span class="text-xs text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-clock"></i> Due in &lt; 10 days</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Audit Flags Resolved</p>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">18/19</p>
+                            <span class="text-xs text-blue-600 font-medium mt-1 inline-block"><i class="fa-solid fa-check"></i> 94.7% clean rate</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
+                            <h3 class="text-base font-bold text-gray-800 mb-4">Firm-Wide Revenue vs. Expenses</h3>
+                            <div class="h-72">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-800 mb-4">Recent QBO Webhook Syncs</h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span class="font-medium text-gray-700">Metro Gas Station #4</span>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 2m ago</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span class="font-medium text-gray-700">Express Plumbing LLC</span>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 14m ago</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pb-2">
+                                        <span class="font-medium text-gray-700">Downtown Bistro</span>
+                                        <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Pending CDC</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('clients')" class="w-full mt-4 bg-slate-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
+                                View All Clients
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: CLIENTS TABLE -->
+                <section id="view-clients" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">Client Roster (Loaded from Supabase)</h3>
+                                <p class="text-xs text-gray-500">Click any client row to view detailed filings, expenses, and Chart of Accounts.</p>
+                            </div>
+                            <button onclick="switchTab('onboard')" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fa-solid fa-plus mr-2"></i>Add Client
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-4">Client Name</th>
+                                        <th class="px-6 py-4">Business Profile</th>
+                                        <th class="px-6 py-4">QBO Tier</th>
+                                        <th class="px-6 py-4">Status</th>
+                                        <th class="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="client-table-body" class="divide-y divide-gray-200 text-sm">
+                                    <!-- Populated dynamically via Supabase -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2.5: INDIVIDUAL CLIENT DEEP DIVE -->
+                <section id="view-client-detail" class="hidden space-y-6">
+                    <button onclick="switchTab('clients')" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back to Client Roster</span>
+                    </button>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <span id="detail-badge" class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Industry</span>
+                            <h2 id="detail-name" class="text-2xl font-bold text-gray-900 mt-1">Client Name</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">QuickBooks Online Tier: <span id="detail-tier" class="font-semibold text-gray-700">Tier</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: FILINGS & AUDIT -->
+                <section id="view-filings" class="hidden space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Compliance Filings Schedule</h3>
+                        <p class="text-sm text-gray-600">Audit monitoring and tax filing modules connected to active Supabase entities.</p>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: ONBOARD NEW CLIENT -->
+                <section id="view-onboard" class="hidden space-y-6">
+                    <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Onboard New Business Client</h3>
+                        <p class="text-xs text-gray-500 mb-6">Initialize a new client profile and save directly to Supabase.</p>
+                        
+                        <form id="onboard-form" onsubmit="handleClientOnboarding(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Business Legal Name</label>
+                                <input type="text" id="onboard-name" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., New England Group LLC">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Industry Profile</label>
+                                    <select id="onboard-industry" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option>Gas Station / Convenience</option>
+                                        <option>Plumbing & Contracting</option>
+                                        <option>Restaurant & Bar</option>
+                                        <option>Rideshare / Delivery Fleet</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">QuickBooks Edition</label>
+                                    <select id="onboard-tier" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option>Simple Start</option>
+                                        <option>Essentials</option>
+                                        <option>Plus</option>
+                                        <option>Advanced</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Client Email</label>
+                                <input type="email" id="onboard-email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@businessdomain.com">
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                Save to Supabase & Generate QBO Link
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Controller & Supabase Integration -->
+    <script>
+        // ==============================================================================
+        // CONFIGURATION & CREDENTIALS BLOCK
+        // (Enter your base project URL - do not include /rest/v1/)
+        // ==============================================================================
+        const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0';
+        // ==============================================================================
+
+        let supabaseClient = null;
         try {
-            const { data: clients, error } = await supabaseClient
+            if (SUPABASE_URL.includes('https://') && !SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.warn('Supabase not initialized yet:', e);
+        }
+
+        let revenueChartInstance = null;
+
+        async function loadClientsData() {
+            if (!supabaseClient) {
+                console.log('Using mock client data until Supabase keys are configured.');
+                document.getElementById('active-clients-count').innerText = '3 (Mock)';
+                return;
+            }
+            try {
+                const { data: clients, error } = await supabaseClient
+                    .from('clients')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                document.getElementById('active-clients-count').innerText = clients.length;
+
+                const tableBody = document.getElementById('client-table-body');
+                tableBody.innerHTML = '';
+
+                clients.forEach(client => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-blue-50/50 cursor-pointer transition-colors';
+                    row.setAttribute('onclick', `openClientDetail('${client.business_name}', '${client.industry}', '${client.qbo_tier}')`);
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-semibold text-gray-900">${client.business_name}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.industry}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.qbo_tier}</td>
+                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">${client.sync_status || 'Active Sync'}</span></td>
+                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error fetching clients from Supabase:', err.message);
+            }
+        }
+
+        async function handleClientOnboarding(event) {
+            event.preventDefault();
+            
+            const businessName = document.getElementById('onboard-name').value;
+            const industry = document.getElementById('onboard-industry').value;
+            const qboTier = document.getElementById('onboard-tier').value;
+            const email = document.getElementById('onboard-email').value;
+
+            if (!supabaseClient) {
+                alert('Please configure your Supabase URL and Anon Key in index.html to save new clients.');
+                return;
+            }
+
+            const { error } = await supabaseClient
                 .from('clients')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .insert([{ business_name: businessName, industry: industry, qbo_tier: qboTier, client_email: email, sync_status: 'Pending OAuth' }]);
 
-            if (error) throw error;
+            if (error) {
+                alert('Error saving client: ' + error.message);
+            } else {
+                alert('Client profile created in Supabase successfully!');
+                document.getElementById('onboard-form').reset();
+                switchTab('clients');
+                loadClientsData();
+            }
+        }
 
-            document.getElementById('active-clients-count').innerText = clients.length;
-
-            const tableBody = document.getElementById('client-table-body');
-            tableBody.innerHTML = '';
-
-            clients.forEach(client => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-blue-50/50 cursor-pointer transition-colors';
-                row.setAttribute('onclick', `openClientDetail('${client.business_name}', '${client.industry}', '${client.qbo_tier}')`);
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-semibold text-gray-900">${client.business_name}</td>
-                    <td class="px-6 py-4 text-gray-600">${client.industry}</td>
-                    <td class="px-6 py-4 text-gray-600">${client.qbo_tier}</td>
-                    <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">${client.sync_status || 'Active Sync'}</span></td>
-                    <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
-                `;
-                tableBody.appendChild(row);
+        function switchTab(tabId) {
+            ['dashboard', 'clients', 'client-detail', 'filings', 'onboard'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if(el) el.classList.add('hidden');
             });
-        } catch (err) {
-            console.error('Error fetching clients from Supabase:', err.message);
-        }
-    }
+            ['dashboard', 'clients', 'filings', 'onboard'].forEach(n => {
+                const btn = document.getElementById(`nav-${n}`);
+                if(btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('hover:bg-slate-800', 'hover:text-white');
+                }
+            });
 
-    // Handle Client Onboarding Form
-    async function handleClientOnboarding(event) {
-        event.preventDefault();
-        
-        const businessName = document.getElementById('onboard-name').value;
-        const industry = document.getElementById('onboard-industry').value;
-        const qboTier = document.getElementById('onboard-tier').value;
-        const email = document.getElementById('onboard-email').value;
+            const targetView = document.getElementById(`view-${tabId}`);
+            if(targetView) targetView.classList.remove('hidden');
 
-        if (!supabaseClient) {
-            alert('Please configure your Supabase URL and Anon Key in index.html to save new clients.');
-            return;
-        }
-
-        const { error } = await supabaseClient
-            .from('clients')
-            .insert([{ business_name: businessName, industry: industry, qbo_tier: qboTier, client_email: email, sync_status: 'Pending OAuth' }]);
-
-        if (error) {
-            alert('Error saving client: ' + error.message);
-        } else {
-            alert('Client profile created in Supabase successfully!');
-            document.getElementById('onboard-form').reset();
-            switchTab('clients');
-            loadClientsData();
-        }
-    }
-
-    // Robust Tab Switching Function
-    function switchTab(tabId) {
-        ['dashboard', 'clients', 'client-detail', 'filings', 'onboard'].forEach(v => {
-            const el = document.getElementById(`view-${v}`);
-            if(el) el.classList.add('hidden');
-        });
-
-        ['dashboard', 'clients', 'filings', 'onboard'].forEach(n => {
-            const btn = document.getElementById(`nav-${n}`);
-            if(btn) {
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.classList.add('hover:bg-slate-800', 'hover:text-white');
+            if(['dashboard', 'clients', 'filings', 'onboard'].includes(tabId)) {
+                const activeBtn = document.getElementById(`nav-${tabId}`);
+                if(activeBtn) {
+                    activeBtn.classList.remove('hover:bg-slate-800', 'hover:text-white');
+                    activeBtn.classList.add('bg-blue-600', 'text-white');
+                }
             }
-        });
 
-        const targetView = document.getElementById(`view-${tabId}`);
-        if(targetView) targetView.classList.remove('hidden');
+            const titles = {
+                'dashboard': 'Firm Overview Dashboard',
+                'clients': 'Client Roster & Accounts',
+                'client-detail': 'Client Financial File & Tax Prep',
+                'filings': 'Compliance Filings & Audit Center',
+                'onboard': 'Onboard New Business Client'
+            };
+            const headerEl = document.getElementById('header-title');
+            if(headerEl) headerEl.innerText = titles[tabId] || 'CPA Portal';
 
-        if(['dashboard', 'clients', 'filings', 'onboard'].includes(tabId)) {
-            const activeBtn = document.getElementById(`nav-${tabId}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('hover:bg-slate-800', 'hover:text-white');
-                activeBtn.classList.add('bg-blue-600', 'text-white');
+            if(tabId === 'dashboard' && !revenueChartInstance) {
+                initChart();
             }
         }
 
-        const titles = {
-            'dashboard': 'Firm Overview Dashboard',
-            'clients': 'Client Roster & Accounts',
-            'client-detail': 'Client Financial File & Tax Prep',
-            'filings': 'Compliance Filings & Audit Center',
-            'onboard': 'Onboard New Business Client'
-        };
-        const headerEl = document.getElementById('header-title');
-        if(headerEl) headerEl.innerText = titles[tabId] || 'CPA Portal';
+        function openClientDetail(name, profile, tier) {
+            document.getElementById('detail-name').innerText = name;
+            document.getElementById('detail-badge').innerText = profile;
+            document.getElementById('detail-tier').innerText = tier;
+            switchTab('client-detail');
+        }
 
-        if(tabId === 'dashboard' && !revenueChartInstance) {
+        function initChart() {
+            const canvas = document.getElementById('revenueChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            revenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [
+                        { label: 'Revenue ($)', data: [110000, 125000, 118000, 129900], backgroundColor: '#2563eb', borderRadius: 6 },
+                        { label: 'Expenses ($)', data: [82000, 91000, 85000, 94000], backgroundColor: '#94a3b8', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        window.onload = () => {
             initChart();
-        }
-    }
-
-    function openClientDetail(name, profile, tier) {
-        document.getElementById('detail-name').innerText = name;
-        document.getElementById('detail-badge').innerText = profile;
-        document.getElementById('detail-tier').innerText = tier;
-        switchTab('client-detail');
-    }
-
-    function initChart() {
-        const canvas = document.getElementById('revenueChart');
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        revenueChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [
-                    { label: 'Revenue ($)', data: [110000, 125000, 118000, 129900], backgroundColor: '#2563eb', borderRadius: 6 },
-                    { label: 'Expenses ($)', data: [82000, 91000, 85000, 94000], backgroundColor: '#94a3b8', borderRadius: 6 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } },
-                scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-            }
-        });
-    }
-
-    // Initialize on window load safely
-    window.onload = () => {
-        initChart();
-        loadClientsData();
-    };
-</script>
+            loadClientsData();
+        };
+    </script>
+</body>
+</html>
