@@ -32,9 +32,9 @@ class CPAAutomationEngine:
     def __init__(self, config: Optional[EngineConfig] = None) -> None:
         self.config = config or EngineConfig()
         
-        # Initialize Supabase Client using environment secrets
-        supabase_url = os.environ.get("SUPABASE_URL", "YOUR_SUPABASE_PROJECT_URL")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "YOUR_SUPABASE_SERVICE_ROLE_KEY")
+        # Initialize abase Client using environment secrets
+        supabase_url = os.environ.get("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
         self.supabase: Client = create_client(supabase_url, supabase_key)
 
     @staticmethod
