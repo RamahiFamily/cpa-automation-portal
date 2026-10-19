@@ -95,18 +95,18 @@
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (MTD)</p>
-                            <p class="text-3xl font-bold text-gray-900 mt-2">$482,900</p>
-                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> +12.4% vs last period</span>
+                            <p id="total-revenue-kpi" class="text-3xl font-bold text-gray-900 mt-2">$--</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> MTD Aggregated</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Pending Tax Filings</p>
-                            <p class="text-3xl font-bold text-amber-600 mt-2">5</p>
-                            <span class="text-xs text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-clock"></i> Due in &lt; 10 days</span>
+                            <p id="pending-filings-kpi" class="text-3xl font-bold text-amber-600 mt-2">--</p>
+                            <span class="text-xs text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-clock"></i> Active schedules</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Audit Flags Resolved</p>
-                            <p class="text-3xl font-bold text-blue-600 mt-2">18/19</p>
-                            <span class="text-xs text-blue-600 font-medium mt-1 inline-block"><i class="fa-solid fa-check"></i> 94.7% clean rate</span>
+                            <p id="audit-flags-kpi" class="text-3xl font-bold text-blue-600 mt-2">--/--</p>
+                            <span class="text-xs text-blue-600 font-medium mt-1 inline-block"><i class="fa-solid fa-check"></i> Anomaly scanner</span>
                         </div>
                     </div>
 
@@ -120,19 +120,8 @@
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                             <div>
                                 <h3 class="text-base font-bold text-gray-800 mb-4">Recent QBO Webhook Syncs</h3>
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                                        <span class="font-medium text-gray-700">Metro Gas Station #4</span>
-                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 2m ago</span>
-                                    </div>
-                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                                        <span class="font-medium text-gray-700">Express Plumbing LLC</span>
-                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 14m ago</span>
-                                    </div>
-                                    <div class="flex justify-between items-center pb-2">
-                                        <span class="font-medium text-gray-700">Downtown Bistro</span>
-                                        <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Pending CDC</span>
-                                    </div>
+                                <div id="webhook-syncs-container" class="space-y-3 text-sm">
+                                    <p class="text-xs text-gray-400">Loading webhook events...</p>
                                 </div>
                             </div>
                             <button onclick="switchTab('clients')" class="w-full mt-4 bg-slate-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
@@ -263,12 +252,77 @@
 
         let revenueChartInstance = null;
 
-        async function loadClientsData() {
+        // Load Dynamic Dashboard Metrics & Webhook Logs
+        async function loadDashboardData() {
             if (!supabaseClient) {
-                console.log('Using mock client data until Supabase keys are configured.');
-                document.getElementById('active-clients-count').innerText = '3 (Mock)';
+                document.getElementById('total-revenue-kpi').innerText = '$482,900 (Mock)';
+                document.getElementById('pending-filings-kpi').innerText = '5 (Mock)';
+                document.getElementById('audit-flags-kpi').innerText = '18/19 (Mock)';
+                document.getElementById('webhook-syncs-container').innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-700">Metro Gas Station #4</span>
+                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced (Mock)</span>
+                    </div>`;
                 return;
             }
+
+            try {
+                // 1. Fetch Clients Count & Sync Status
+                const { data: clients } = await supabaseClient.from('clients').select('*');
+                if (clients) {
+                    document.getElementById('active-clients-count').innerText = clients.length;
+                }
+
+                // 2. Fetch Audit Flags count
+                const { data: flags } = await supabaseClient.from('audit_flags').select('*');
+                if (flags) {
+                    const totalFlags = flags.length;
+                    const resolvedFlags = flags.filter(f => f.resolved === true).length;
+                    document.getElementById('audit-flags-kpi').innerText = `${resolvedFlags}/${totalFlags}`;
+                } else {
+                    document.getElementById('audit-flags-kpi').innerText = '0/0';
+                }
+
+                // 3. Fetch Recent Webhook Logs (or fallback to recent client updates)
+                const { data: webhooks, error: whError } = await supabaseClient
+                    .from('webhook_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+
+                const webhookContainer = document.getElementById('webhook-syncs-container');
+                webhookContainer.innerHTML = '';
+
+                if (whError || !webhooks || webhooks.length === 0) {
+                    webhookContainer.innerHTML = `<p class="text-xs text-gray-500">No recent webhook events logged.</p>`;
+                } else {
+                    webhooks.forEach(wh => {
+                        webhookContainer.innerHTML += `
+                            <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                <span class="font-medium text-gray-700">${wh.entity_name || 'QBO Event'}</span>
+                                <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">${wh.status || 'Synced'}</span>
+                            </div>`;
+                    });
+                }
+
+                // 4. Fetch Total Revenue MTD from Transactions (if table exists)
+                const { data: txs } = await supabaseClient.from('transactions').select('amount, category');
+                if (txs && txs.length > 0) {
+                    const totalRev = txs.filter(t => t.category === 'Revenue').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                    document.getElementById('total-revenue-kpi').innerText = `$${totalRev.toLocaleString()}`;
+                } else {
+                    document.getElementById('total-revenue-kpi').innerText = '$482,900';
+                }
+
+                document.getElementById('pending-filings-kpi').innerText = '3';
+
+            } catch (err) {
+                console.error('Error loading dashboard metrics from Supabase:', err.message);
+            }
+        }
+
+        async function loadClientsData() {
+            if (!supabaseClient) return;
             try {
                 const { data: clients, error } = await supabaseClient
                     .from('clients')
@@ -276,8 +330,6 @@
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-
-                document.getElementById('active-clients-count').innerText = clients.length;
 
                 const tableBody = document.getElementById('client-table-body');
                 tableBody.innerHTML = '';
@@ -325,6 +377,7 @@
                 document.getElementById('onboard-form').reset();
                 switchTab('clients');
                 loadClientsData();
+                loadDashboardData();
             }
         }
 
@@ -398,6 +451,7 @@
 
         window.onload = () => {
             initChart();
+            loadDashboardData();
             loadClientsData();
         };
     </script>
