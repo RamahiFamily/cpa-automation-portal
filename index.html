@@ -235,40 +235,42 @@
     <script>
         // ==============================================================================
         // CONFIGURATION & CREDENTIALS BLOCK
-        // (Enter your base project URL - do not include /rest/v1/)
         // ==============================================================================
-        const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/';
+        const SUPABASE_URL = 'https://vgzymkfrtdqizytadyjf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0';
         // ==============================================================================
 
         let supabaseClient = null;
         try {
-            if (SUPABASE_URL.includes('https://') && !SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client initialized successfully:', !!supabaseClient);
         } catch (e) {
-            console.warn('Supabase not initialized yet:', e);
+            console.error('Supabase initialization error:', e);
         }
 
         let revenueChartInstance = null;
 
-        // Load Dynamic Dashboard Metrics & Webhook Logs
+        // Load Dynamic Dashboard Metrics & Webhook Logs with Error Logging
         async function loadDashboardData() {
             if (!supabaseClient) {
-                console.warn('Supabase not configured.');
+                console.warn('Supabase client not available.');
                 return;
             }
 
             try {
                 // 1. Fetch Clients Count
-                const { count: clientCount } = await supabaseClient.from('clients').select('*', { count: 'exact', head: true });
-                if (clientCount !== null) {
+                const { count: clientCount, error: clientErr } = await supabaseClient.from('clients').select('*', { count: 'exact', head: true });
+                if (clientErr) {
+                    console.error('Clients query error:', clientErr);
+                } else if (clientCount !== null) {
                     document.getElementById('active-clients-count').innerText = clientCount;
                 }
 
                 // 2. Fetch Audit Flags (Resolved / Total)
-                const { data: flags } = await supabaseClient.from('audit_flags').select('*');
-                if (flags) {
+                const { data: flags, error: flagsErr } = await supabaseClient.from('audit_flags').select('*');
+                if (flagsErr) {
+                    console.error('Audit flags query error:', flagsErr);
+                } else if (flags) {
                     const totalFlags = flags.length;
                     const resolvedFlags = flags.filter(f => f.resolved === true).length;
                     document.getElementById('audit-flags-kpi').innerText = `${resolvedFlags}/${totalFlags}`;
@@ -277,15 +279,19 @@
                 }
 
                 // 3. Fetch Pending Tax Filings Count
-                const { count: filingCount } = await supabaseClient
+                const { count: filingCount, error: filingErr } = await supabaseClient
                     .from('tax_filings')
                     .select('*', { count: 'exact', head: true })
                     .eq('status', 'Pending');
                 
-                document.getElementById('pending-filings-kpi').innerText = filingCount !== null ? filingCount : '0';
+                if (filingErr) {
+                    console.error('Tax filings query error:', filingErr);
+                } else {
+                    document.getElementById('pending-filings-kpi').innerText = filingCount !== null ? filingCount : '0';
+                }
 
                 // 4. Fetch Recent Webhook Logs
-                const { data: webhooks } = await supabaseClient
+                const { data: webhooks, error: whError } = await supabaseClient
                     .from('webhook_logs')
                     .select('*')
                     .order('created_at', { ascending: false })
@@ -294,7 +300,10 @@
                 const webhookContainer = document.getElementById('webhook-syncs-container');
                 webhookContainer.innerHTML = '';
 
-                if (!webhooks || webhooks.length === 0) {
+                if (whError) {
+                    console.error('Webhook logs query error:', whError);
+                    webhookContainer.innerHTML = `<p class="text-xs text-red-500">Error loading webhook logs.</p>`;
+                } else if (!webhooks || webhooks.length === 0) {
                     webhookContainer.innerHTML = `<p class="text-xs text-gray-500">No recent webhook events logged.</p>`;
                 } else {
                     webhooks.forEach(wh => {
@@ -306,17 +315,22 @@
                     });
                 }
 
-                // 5. Calculate Total Revenue MTD from Transactions table
-                const { data: txs } = await supabaseClient.from('transactions').select('amount, category');
-                if (txs && txs.length > 0) {
-                    const totalRev = txs.filter(t => t.category.toLowerCase() === 'revenue').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                // 5. Calculate Total Revenue MTD from Transactions table (Null-Safe)
+                const { data: txs, error: txErr } = await supabaseClient.from('transactions').select('amount, category');
+                if (txErr) {
+                    console.error('Transactions query error:', txErr);
+                    document.getElementById('total-revenue-kpi').innerText = '$0';
+                } else if (txs && txs.length > 0) {
+                    const totalRev = txs
+                        .filter(t => t && t.category && String(t.category).toLowerCase() === 'revenue')
+                        .reduce((acc, curr) => acc + (curr.amount || 0), 0);
                     document.getElementById('total-revenue-kpi').innerText = `$${totalRev.toLocaleString()}`;
                 } else {
                     document.getElementById('total-revenue-kpi').innerText = '$0';
                 }
 
             } catch (err) {
-                console.error('Error loading dynamic dashboard metrics:', err.message);
+                console.error('Error loading dynamic dashboard metrics:', err);
             }
         }
 
@@ -328,7 +342,10 @@
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Clients roster query error:', error);
+                    return;
+                }
 
                 const tableBody = document.getElementById('client-table-body');
                 tableBody.innerHTML = '';
@@ -348,7 +365,7 @@
                     tableBody.appendChild(row);
                 });
             } catch (err) {
-                console.error('Error fetching clients from Supabase:', err.message);
+                console.error('Error fetching clients from Supabase:', err);
             }
         }
 
