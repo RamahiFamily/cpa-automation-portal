@@ -90,22 +90,22 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Active Business Clients</p>
-                            <p id="active-clients-count" class="text-3xl font-bold text-gray-900 mt-2">--</p>
+                            <p id="active-clients-count" class="text-3xl font-bold text-gray-900 mt-2">0</p>
                             <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> Live from Supabase</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (MTD)</p>
-                            <p id="total-revenue-kpi" class="text-3xl font-bold text-gray-900 mt-2">$--</p>
+                            <p id="total-revenue-kpi" class="text-3xl font-bold text-gray-900 mt-2">$0</p>
                             <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> MTD Aggregated</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Pending Tax Filings</p>
-                            <p id="pending-filings-kpi" class="text-3xl font-bold text-amber-600 mt-2">--</p>
+                            <p id="pending-filings-kpi" class="text-3xl font-bold text-amber-600 mt-2">0</p>
                             <span class="text-xs text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-clock"></i> Active schedules</span>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Audit Flags Resolved</p>
-                            <p id="audit-flags-kpi" class="text-3xl font-bold text-blue-600 mt-2">--/--</p>
+                            <p id="audit-flags-kpi" class="text-3xl font-bold text-blue-600 mt-2">0/0</p>
                             <span class="text-xs text-blue-600 font-medium mt-1 inline-block"><i class="fa-solid fa-check"></i> Anomaly scanner</span>
                         </div>
                     </div>
@@ -255,25 +255,18 @@
         // Load Dynamic Dashboard Metrics & Webhook Logs
         async function loadDashboardData() {
             if (!supabaseClient) {
-                document.getElementById('total-revenue-kpi').innerText = '$482,900 (Mock)';
-                document.getElementById('pending-filings-kpi').innerText = '5 (Mock)';
-                document.getElementById('audit-flags-kpi').innerText = '18/19 (Mock)';
-                document.getElementById('webhook-syncs-container').innerHTML = `
-                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-700">Metro Gas Station #4</span>
-                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced (Mock)</span>
-                    </div>`;
+                console.warn('Supabase not configured.');
                 return;
             }
 
             try {
-                // 1. Fetch Clients Count & Sync Status
-                const { data: clients } = await supabaseClient.from('clients').select('*');
-                if (clients) {
-                    document.getElementById('active-clients-count').innerText = clients.length;
+                // 1. Fetch Clients Count
+                const { count: clientCount } = await supabaseClient.from('clients').select('*', { count: 'exact', head: true });
+                if (clientCount !== null) {
+                    document.getElementById('active-clients-count').innerText = clientCount;
                 }
 
-                // 2. Fetch Audit Flags count
+                // 2. Fetch Audit Flags (Resolved / Total)
                 const { data: flags } = await supabaseClient.from('audit_flags').select('*');
                 if (flags) {
                     const totalFlags = flags.length;
@@ -283,8 +276,16 @@
                     document.getElementById('audit-flags-kpi').innerText = '0/0';
                 }
 
-                // 3. Fetch Recent Webhook Logs (or fallback to recent client updates)
-                const { data: webhooks, error: whError } = await supabaseClient
+                // 3. Fetch Pending Tax Filings Count
+                const { count: filingCount } = await supabaseClient
+                    .from('tax_filings')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'Pending');
+                
+                document.getElementById('pending-filings-kpi').innerText = filingCount !== null ? filingCount : '0';
+
+                // 4. Fetch Recent Webhook Logs
+                const { data: webhooks } = await supabaseClient
                     .from('webhook_logs')
                     .select('*')
                     .order('created_at', { ascending: false })
@@ -293,7 +294,7 @@
                 const webhookContainer = document.getElementById('webhook-syncs-container');
                 webhookContainer.innerHTML = '';
 
-                if (whError || !webhooks || webhooks.length === 0) {
+                if (!webhooks || webhooks.length === 0) {
                     webhookContainer.innerHTML = `<p class="text-xs text-gray-500">No recent webhook events logged.</p>`;
                 } else {
                     webhooks.forEach(wh => {
@@ -305,19 +306,17 @@
                     });
                 }
 
-                // 4. Fetch Total Revenue MTD from Transactions (if table exists)
+                // 5. Calculate Total Revenue MTD from Transactions table
                 const { data: txs } = await supabaseClient.from('transactions').select('amount, category');
                 if (txs && txs.length > 0) {
-                    const totalRev = txs.filter(t => t.category === 'Revenue').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                    const totalRev = txs.filter(t => t.category.toLowerCase() === 'revenue').reduce((acc, curr) => acc + (curr.amount || 0), 0);
                     document.getElementById('total-revenue-kpi').innerText = `$${totalRev.toLocaleString()}`;
                 } else {
-                    document.getElementById('total-revenue-kpi').innerText = '$482,900';
+                    document.getElementById('total-revenue-kpi').innerText = '$0';
                 }
 
-                document.getElementById('pending-filings-kpi').innerText = '3';
-
             } catch (err) {
-                console.error('Error loading dashboard metrics from Supabase:', err.message);
+                console.error('Error loading dynamic dashboard metrics:', err.message);
             }
         }
 
