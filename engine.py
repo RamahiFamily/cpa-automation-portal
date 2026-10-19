@@ -9,8 +9,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Mapping, Optional
 import logging
 import math
+import os
 
 import pandas as pd
+from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +27,15 @@ class EngineConfig:
 
 
 class CPAAutomationEngine:
-    """Run accounting review checks and generate tax/accounting summaries."""
+    """Run accounting review checks and generate tax/accounting summaries with Supabase sync."""
 
     def __init__(self, config: Optional[EngineConfig] = None) -> None:
         self.config = config or EngineConfig()
+        
+        # Initialize Supabase Client using environment secrets
+        supabase_url = os.environ.get("SUPABASE_URL", "YOUR_SUPABASE_PROJECT_URL")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "YOUR_SUPABASE_SERVICE_ROLE_KEY")
+        self.supabase: Client = create_client(supabase_url, supabase_key)
 
     @staticmethod
     def _require_columns(df: pd.DataFrame, required: Iterable[str]) -> None:
@@ -46,12 +53,8 @@ class CPAAutomationEngine:
             raise ValueError(f"{field} must be a finite non-negative number")
         return number
 
-    def run_anomaly_scanner(self, transactions: pd.DataFrame) -> pd.DataFrame:
-        """Return flagged transaction-level exceptions.
-
-        Expected columns: date, vendor, amount, category. Optional columns:
-        business_purpose, is_fixed_asset, is_1099_vendor, w9_on_file.
-        """
+    def run_anomaly_scanner(self, transactions: pd.DataFrame, client_id: Optional[str] = None) -> pd.DataFrame:
+        """Return flagged transaction-level exceptions and optionally push to Supabase."""
         if not isinstance(transactions, pd.DataFrame):
             raise TypeError("transactions must be a pandas DataFrame")
         self._require_columns(transactions, ("date", "vendor", "amount", "category"))
@@ -85,15 +88,28 @@ class CPAAutomationEngine:
                 flags.append("Missing W-9 for vendor at/over configured 1099-NEC review threshold")
 
             for flag in flags:
-                findings.append({
-                    "source_index": idx,
-                    "date": row["date"],
+                finding = {
+                    "source_index": int(idx),
+                    "date": str(row["date"]),
                     "vendor": vendor,
                     "amount": amount,
                     "flag": flag,
-                })
+                }
+                if client_id:
+                    finding["client_id"] = client_id
+                findings.append(finding)
 
-        return pd.DataFrame(findings, columns=["source_index", "date", "vendor", "amount", "flag"])
+        results_df = pd.DataFrame(findings, columns=["source_index", "date", "vendor", "amount", "flag"])
+
+        # Push findings to Supabase audit log if configured
+        if findings and client_id:
+            try:
+                self.supabase.table("audit_flags").upsert(findings).execute()
+                logger.info(f"Successfully synced {len(findings)} audit flags to Supabase.")
+            except Exception as e:
+                logger.error(f"Failed to push audit flags to Supabase: {e}")
+
+        return results_df
 
     def calculate_ct_os114(
         self,
@@ -102,11 +118,7 @@ class CPAAutomationEngine:
         business_use_taxable_purchases: float = 0.0,
         business_use_tax_rate: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """Calculate configurable CT sales, meals, and business-use tax estimates.
-
-        This is a calculation helper, not an electronic filing implementation.
-        Rates should be confirmed for the filing period and transaction type.
-        """
+        """Calculate configurable CT sales, meals, and business-use tax estimates."""
         retail = self._money(gross_retail, "gross_retail")
         meals = self._money(gross_meals, "gross_meals")
         use_base = self._money(business_use_taxable_purchases, "business_use_taxable_purchases")
@@ -117,6 +129,7 @@ class CPAAutomationEngine:
         sales_tax = round(retail * self.config.sales_tax_rate, 2)
         meals_tax = round(meals * self.config.meals_tax_rate, 2)
         use_tax = round(use_base * use_rate, 2)
+        
         return {
             "inputs": {"gross_retail": retail, "gross_meals": meals, "business_use_taxable_purchases": use_base},
             "rates": {"sales_tax": self.config.sales_tax_rate, "meals_tax": self.config.meals_tax_rate, "business_use_tax": use_rate},
@@ -128,11 +141,7 @@ class CPAAutomationEngine:
         ledger: pd.DataFrame,
         irs_line_map: Optional[Mapping[str, str]] = None,
     ) -> pd.DataFrame:
-        """Aggregate ledger balances by account/category and map them to supplied IRS lines.
-
-        Required columns: account, category, debit, credit. The caller supplies
-        an ``irs_line_map`` keyed by category so entity-specific mappings are explicit.
-        """
+        """Aggregate ledger balances by account/category and map them to supplied IRS lines."""
         if not isinstance(ledger, pd.DataFrame):
             raise TypeError("ledger must be a pandas DataFrame")
         self._require_columns(ledger, ("account", "category", "debit", "credit"))
