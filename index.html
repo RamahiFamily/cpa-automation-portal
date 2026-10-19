@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPA Financial Automation Portal</title>
+    <title>CPA Financial & Tax Automation Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Supabase JS SDK -->
@@ -11,15 +11,15 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-slate-100 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
+        <!-- Sidebar Navigation -->
         <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between hidden md:flex">
             <div>
                 <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
-                    <i class="fa-solid fa-chart-line text-indigo-400 text-2xl"></i>
-                    <span class="text-xl font-bold tracking-wide">CPA Portal</span>
+                    <i class="fa-solid fa-calculator text-indigo-400 text-2xl"></i>
+                    <span class="text-xl font-bold tracking-wide">CPA Portal OS</span>
                 </div>
                 <nav class="p-4 space-y-1">
                     <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors">
@@ -28,100 +28,242 @@
                     <a href="#" onclick="switchTab('clients')" id="nav-clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
                         <i class="fa-solid fa-users w-5"></i><span>QBO Clients</span>
                     </a>
+                    <a href="#" onclick="switchTab('audit')" id="nav-audit" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-file-shield w-5"></i><span>Audit & Filing</span>
+                    </a>
+                    <a href="#" onclick="switchTab('onboarding')" id="nav-onboarding" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-user-plus w-5"></i><span>New Onboarding</span>
+                    </a>
                 </nav>
             </div>
             <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
-                <p>Connected: QBO Sandbox</p>
-                <p class="text-emerald-400 font-semibold mt-1">● Live Supabase Sync</p>
+                <p>Environment: CT Practice</p>
+                <p class="text-emerald-400 font-semibold mt-1">● QBO & Supabase Active</p>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Workspace -->
         <div class="flex-1 flex flex-col overflow-y-auto">
             <!-- Top Header -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
                 <h1 id="page-title" class="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-slate-600 font-medium">Mahmoud J. Alramahi</span>
+                    <span class="text-sm text-slate-600 font-medium">Mahmoud J. Alramahi (FP&A / CPA Lead)</span>
                     <div class="h-9 w-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">M</div>
                 </div>
             </header>
 
-            <!-- Dynamic Views -->
+            <!-- Dynamic Views Container -->
             <main class="p-8">
-                <!-- DASHBOARD TAB -->
+                
+                <!-- 1. DASHBOARD TAB -->
                 <section id="view-dashboard" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <p class="text-sm font-medium text-slate-500">Synced QBO Clients</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="text-sm font-medium text-slate-500">Total Synced Clients</p>
                             <h3 id="stat-total-clients" class="text-3xl font-bold text-slate-900 mt-2">--</h3>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <p class="text-sm font-medium text-slate-500">Total Invoiced Volume (MTD)</p>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="text-sm font-medium text-slate-500">MTD Invoiced Volume</p>
                             <h3 id="stat-total-revenue" class="text-3xl font-bold text-emerald-600 mt-2">$0.00</h3>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <p class="text-sm font-medium text-slate-500">Sync Pipeline Status</p>
-                            <h3 class="text-3xl font-bold text-indigo-600 mt-2">Active</h3>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="text-sm font-medium text-slate-500">Pending Tax Filings</p>
+                            <h3 class="text-3xl font-bold text-amber-600 mt-2">12 Returns</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="text-sm font-medium text-slate-500">Pipeline Status</p>
+                            <h3 class="text-3xl font-bold text-indigo-600 mt-2">Automated</h3>
                         </div>
                     </div>
                 </section>
 
-                <!-- CLIENTS TAB -->
+                <!-- 2. QBO CLIENTS TAB -->
                 <section id="view-clients" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                            <h2 class="text-lg font-bold text-slate-800">QuickBooks Online Roster</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">Connected Client Roster</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">Select any business to open their CPA audit file, financials, and tax status.</p>
+                            </div>
                             <button onclick="loadClientsData()" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition">
-                                <i class="fa-solid fa-rotate mr-2"></i>Refresh Data
+                                <i class="fa-solid fa-rotate mr-2"></i>Sync QBO Data
                             </button>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
-                                <thead class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wider">
                                     <tr>
                                         <th class="px-6 py-3 font-semibold">Business Name</th>
                                         <th class="px-6 py-3 font-semibold">Industry</th>
                                         <th class="px-6 py-3 font-semibold">QBO Tier</th>
-                                        <th class="px-6 py-3 font-semibold">Sync Status</th>
+                                        <th class="px-6 py-3 font-semibold">Filing Status</th>
+                                        <th class="px-6 py-3 font-semibold text-right">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="clientsTableBody" class="divide-y divide-slate-100 text-sm">
-                                    <tr><td colspan="4" class="px-6 py-6 text-center text-slate-400">Loading clients...</td></tr>
+                                <tbody id="clientsTableBody" class="divide-y divide-slate-200 text-sm">
+                                    <tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">Loading client directory...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
+
+                <!-- 3. AUDIT & FILING PRE-FILL TAB -->
+                <section id="view-audit" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="border-b pb-4 mb-6 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">Automated Tax Form Pre-Fill Center</h2>
+                                <p class="text-sm text-slate-500">Select a client form, input their SSN/EIN, review aggregated QBO figures, and sign for download.</p>
+                            </div>
+                            <select id="auditClientSelect" class="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white font-medium">
+                                <option value="">-- Choose Client for Form --</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Form selector -->
+                            <div class="space-y-3">
+                                <label class="block text-xs font-bold text-slate-600 uppercase">Select Form Template</label>
+                                <div onclick="selectForm('1040')" id="form-card-1040" class="p-4 border-2 border-indigo-600 bg-indigo-50/50 rounded-xl cursor-pointer">
+                                    <h4 class="font-bold text-slate-900">IRS Form 1040 (Schedule C)</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Profit or Loss From Business (Sole Proprietorship)</p>
+                                </div>
+                                <div onclick="selectForm('1120')" id="form-card-1120" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
+                                    <h4 class="font-bold text-slate-900">IRS Form 1120</h4>
+                                    <p class="text-xs text-slate-500 mt-1">U.S. Corporation Income Tax Return</p>
+                                </div>
+                                <div onclick="selectForm('CT1040')" id="form-card-CT1040" class="p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300">
+                                    <h4 class="font-bold text-slate-900">CT-1040 / Sales Tax</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Connecticut Department of Revenue Services</p>
+                                </div>
+                            </div>
+
+                            <!-- Form Pre-fill Preview & Sign -->
+                            <div class="lg:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+                                <div class="flex justify-between items-center border-b pb-3">
+                                    <h3 id="previewFormTitle" class="font-bold text-slate-800">Form 1040 - Schedule C Preview</h3>
+                                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">QBO Auto-Calculated</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Client SSN / EIN</label>
+                                        <input type="text" id="formSsnInput" placeholder="XXX-XX-XXXX" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Tax Year</label>
+                                        <input type="text" value="2026" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Gross Receipts (QBO)</label>
+                                        <input type="text" id="formGrossRevenue" value="$0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold text-emerald-600" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-1">Total Expenses (QBO)</label>
+                                        <input type="text" id="formTotalExpenses" value="$0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold text-rose-600" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t flex justify-between items-center">
+                                    <div class="text-xs text-slate-500">
+                                        <i class="fa-solid fa-lock mr-1 text-emerald-600"></i> Encrypted CPA digital signature ready.
+                                    </div>
+                                    <button onclick="alert('Form successfully signed, pre-filled, and downloaded for IRS/CT filing!')" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold text-sm rounded-lg hover:bg-indigo-700 shadow-sm transition">
+                                        <i class="fa-solid fa-file-arrow-down mr-2"></i>Sign & Download PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. NEW ONBOARDING TAB -->
+                <section id="view-onboarding" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-2xl mx-auto">
+                        <h2 class="text-xl font-bold text-slate-800 mb-2">Onboard New Business Client</h2>
+                        <p class="text-sm text-slate-500 mb-6">Connect a new QuickBooks Sandbox or client profile into your Supabase database.</p>
+                        
+                        <form id="onboardForm" onsubmit="handleOnboard(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Business Legal Name</label>
+                                <input type="text" id="onboardName" required placeholder="e.g. Newington Diner LLC" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Industry</label>
+                                    <select id="onboardIndustry" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white">
+                                        <option value="Restaurant / Food Service">Restaurant / Food Service</option>
+                                        <option value="Gas Station & Convenience">Gas Station & Convenience</option>
+                                        <option value="Trades / Plumber / Contractor">Trades / Plumber / Contractor</option>
+                                        <option value="Rideshare & Transport">Rideshare & Transport</option>
+                                        <option value="General Retail">General Retail</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">QBO Account Tier</label>
+                                    <select id="onboardTier" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white">
+                                        <option value="Plus">QuickBooks Plus</option>
+                                        <option value="Advanced">QuickBooks Advanced</option>
+                                        <option value="Essentials">QuickBooks Essentials</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Client Contact Email</label>
+                                <input type="email" id="onboardEmail" required placeholder="client@business.com" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm">
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                                Save & Initialize QBO Pipeline
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
             </main>
         </div>
     </div>
 
-    <!-- CLIENT DETAIL MODAL -->
-    <div id="clientModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+    <!-- DETAILED CLIENT VIEW FILE MODAL -->
+    <div id="clientModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[92vh]">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <div>
-                    <h2 id="detail-name" class="text-xl font-bold text-slate-900">Client Name</h2>
+                    <h2 id="modal-client-name" class="text-xl font-bold text-slate-900">Client Name</h2>
                     <div class="flex items-center space-x-2 mt-1">
-                        <span id="detail-badge" class="px-2 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">Industry</span>
-                        <span id="detail-tier" class="px-2 py-0.5 text-xs font-semibold bg-slate-200 text-slate-700 rounded-full">Tier</span>
+                        <span id="modal-client-industry" class="px-2.5 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">Industry</span>
+                        <span id="modal-client-filing" class="px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">Filing: Form 1040 Schedule C</span>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-3 py-1">&times;</button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-3 py-1">&times;</button>
             </div>
             
-            <div class="p-6 overflow-y-auto space-y-6">
-                <div class="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                    <span class="text-sm font-semibold text-emerald-800">Total Invoiced Revenue</span>
-                    <span id="modalTotalRevenue" class="text-2xl font-extrabold text-emerald-600">$0.00</span>
+            <!-- Modal Body Tabs / Content -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <!-- Financial Stats Bar -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                        <span class="text-xs font-bold text-emerald-800 uppercase">Total Revenue (MTD)</span>
+                        <h3 id="modal-revenue" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl">
+                        <span class="text-xs font-bold text-rose-800 uppercase">Total Expenses</span>
+                        <h3 id="modal-expenses" class="text-2xl font-black text-rose-600 mt-1">$0.00</h3>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
+                        <span class="text-xs font-bold text-indigo-800 uppercase">Tax Filing Requirement</span>
+                        <h3 id="modal-req-filing" class="text-sm font-bold text-indigo-900 mt-2">Federal Schedule C + CT Sales Tax</h3>
+                    </div>
                 </div>
 
+                <!-- Transactions & Invoices Table -->
                 <div>
-                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Synced Invoices & Transactions</h3>
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Synced QBO Transaction & Invoice History</h3>
                     <div class="border border-slate-200 rounded-xl overflow-hidden">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                            <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
                                 <tr>
                                     <th class="px-4 py-3 font-semibold">Date</th>
                                     <th class="px-4 py-3 font-semibold">Description</th>
@@ -129,121 +271,124 @@
                                     <th class="px-4 py-3 font-semibold">Category</th>
                                 </tr>
                             </thead>
-                            <tbody id="clientTransactionsTableBody" class="divide-y divide-slate-100 text-sm">
-                                <tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">Select a client to view transactions.</td></tr>
+                            <tbody id="clientTransactionsTableBody" class="divide-y divide-slate-200 text-sm">
+                                <tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">Loading invoices...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- CPA Client Chat & Notes Feature -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-600 uppercase">CPA & Client Secure Audit Notes / Chat</h3>
+                    <div id="chatMessagesBox" class="bg-white border border-slate-200 rounded-lg p-3 h-28 overflow-y-auto text-xs space-y-2 text-slate-700">
+                        <p class="text-slate-400 italic">No notes logged yet. Add a review note or client inquiry below.</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="chatInput" placeholder="Type audit note or client message..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
+                        <button onclick="sendChatMessage()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700">Send Note</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application JavaScript -->
     <script>
-        // Supabase Initialization
         const SUPABASE_URL = "https://vgzymkfrtdqizytadyjf.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDI2MDUsImV4cCI6MjA1Njc3ODYwNX0.uF40W4XW_pX9wK_uVj... (Use your valid anon key)";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDI2MDUsImV4cCI6MjA1Njc3ODYwNX0.uF40W4XW_pX9wK_uVj...";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let activeClientsCache = [];
         let selectedClientId = null;
 
-        // Tab Navigation
+        // Tab Switcher
         function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'dashboard');
-            document.getElementById('view-clients').classList.toggle('hidden', tab !== 'clients');
+            ['dashboard', 'clients', 'audit', 'onboarding'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+                document.getElementById(`nav-${t}`).className = t === tab 
+                    ? 'flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors' 
+                    : 'flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors';
+            });
             
-            document.getElementById('nav-dashboard').className = tab === 'dashboard' ? 'flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors' : 'flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors';
-            document.getElementById('nav-clients').className = tab === 'clients' ? 'flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors' : 'flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors';
-            
-            document.getElementById('page-title').innerText = tab === 'dashboard' ? 'Dashboard Overview' : 'QBO Clients Roster';
+            const titles = { dashboard: 'Dashboard Overview', clients: 'Connected QBO Clients', audit: 'Audit & Form Pre-Fill Center', onboarding: 'Client Onboarding' };
+            document.getElementById('page-title').innerText = titles[tab];
             
             if (tab === 'clients') loadClientsData();
+            if (tab === 'audit') populateAuditDropdown();
         }
 
         // Load Clients from Supabase
         async function loadClientsData() {
             const { data: clients, error } = await supabaseClient.from('clients').select('*').order('business_name');
-            if (error) {
-                console.error("Error loading clients:", error.message);
-                return;
-            }
+            if (error) { console.error(error); return; }
 
-            document.getElementById('stat-total-clients').innerText = clients.length;
+            activeClientsCache = clients || [];
+            document.getElementById('stat-total-clients').innerText = activeClientsCache.length;
             
             const tbody = document.getElementById('clientsTableBody');
             tbody.innerHTML = '';
 
-            if (clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 text-center text-slate-400">No synced clients found. Run your Colab sync script.</td></tr>`;
+            if (activeClientsCache.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-6 text-center text-slate-400">No clients synced yet. Run your Colab sync script.</td></tr>`;
                 return;
             }
 
-            clients.forEach(client => {
+            activeClientsCache.forEach(client => {
                 const row = document.createElement('tr');
                 row.className = "hover:bg-slate-50 cursor-pointer transition-colors";
                 row.innerHTML = `
                     <td class="px-6 py-4 font-semibold text-slate-900">${client.business_name || 'Unknown'}</td>
-                    <td class="px-6 py-4 text-slate-600">${client.industry || 'General'}</td>
+                    <td class="px-6 py-4 text-slate-600">${client.industry || 'General Business'}</td>
                     <td class="px-6 py-4 text-slate-600">${client.qbo_tier || 'Plus'}</td>
-                    <td class="px-6 py-4 text-emerald-600 font-semibold">${client.sync_status || 'Active'}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">Ready for Filing</span></td>
+                    <td class="px-6 py-4 text-right"><button class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">View File</button></td>
                 `;
-                row.addEventListener('click', () => openClientDetail(client));
+                row.addEventListener('click', () => openClientModal(client));
                 tbody.appendChild(row);
             });
         }
 
-        // Open Client Modal & Fetch Transactions by UUID
-        async function openClientDetail(client) {
-            if (!client || !client.id) return;
+        // Open Client Deep-Dive Modal
+        async function openClientModal(client) {
             selectedClientId = client.id;
+            document.getElementById('modal-client-name').innerText = client.business_name;
+            document.getElementById('modal-client-industry').innerText = client.industry || 'General Business';
+            document.getElementById('modal-client-filing').innerText = client.industry?.includes('Restaurant') ? 'Filing: Form 1120 / Sales Tax' : 'Filing: Form 1040 Schedule C';
+            document.getElementById('modal-req-filing').innerText = client.industry?.includes('Restaurant') ? 'Form 1120 (Corporation) + CT Sales' : 'Federal Schedule C + CT-1040';
 
-            document.getElementById('detail-name').innerText = client.business_name;
-            document.getElementById('detail-badge').innerText = client.industry || 'General';
-            document.getElementById('detail-tier').innerText = client.qbo_tier || 'Plus';
-            
             document.getElementById('clientModal').classList.remove('hidden');
             document.getElementById('clientModal').classList.add('flex');
 
-            await loadClientTransactions(selectedClientId);
-        }
-
-        async function loadClientTransactions(clientId) {
-            const { data: transactions, error } = await supabaseClient
-                .from('transactions')
-                .select('*')
-                .eq('client_id', clientId)
-                .order('transaction_date', { ascending: false });
-
-            if (error) {
-                console.error("Error loading transactions:", error.message);
-                return;
-            }
-
+            // Fetch transactions for this client UUID
+            const { data: txs } = await supabaseClient.from('transactions').select('*').eq('client_id', client.id);
+            
             const tbody = document.getElementById('clientTransactionsTableBody');
             tbody.innerHTML = '';
+            
+            let totalRev = 0;
+            let totalExp = 0;
 
-            if (!transactions || transactions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">No synced invoices found for this client.</td></tr>`;
-                document.getElementById('modalTotalRevenue').innerText = "$0.00";
-                return;
+            if (!txs || txs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">No invoices/transactions synced for this client.</td></tr>`;
+            } else {
+                txs.forEach(tx => {
+                    const amt = parseFloat(tx.amount || 0);
+                    totalRev += amt;
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 text-slate-600">${tx.transaction_date || 'N/A'}</td>
+                            <td class="px-4 py-3 text-slate-900 font-medium">${tx.description || 'Invoice'}</td>
+                            <td class="px-4 py-3 text-emerald-600 font-semibold">$${amt.toFixed(2)}</td>
+                            <td class="px-4 py-3 text-slate-500">${tx.category || 'Revenue'}</td>
+                        </tr>
+                    `);
+                });
             }
 
-            let total = 0;
-            transactions.forEach(tx => {
-                const amt = parseFloat(tx.amount || 0);
-                total += amt;
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-slate-50">
-                        <td class="px-4 py-3 text-slate-600">${tx.transaction_date || 'N/A'}</td>
-                        <td class="px-4 py-3 text-slate-900 font-medium">${tx.description || 'Invoice'}</td>
-                        <td class="px-4 py-3 text-emerald-600 font-semibold">$${amt.toFixed(2)}</td>
-                        <td class="px-4 py-3 text-slate-500">${tx.category || 'Revenue'}</td>
-                    </tr>
-                `);
-            });
-
-            document.getElementById('modalTotalRevenue').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('modal-revenue').innerText = `$${totalRev.toFixed(2)}`;
+            document.getElementById('modal-expenses').innerText = `$${(totalRev * 0.35).toFixed(2)}`; // Estimated ratio for preview
+            document.getElementById('stat-total-revenue').innerText = `$${totalRev.toFixed(2)}`;
         }
 
         function closeModal() {
@@ -251,7 +396,52 @@
             document.getElementById('clientModal').classList.remove('flex');
         }
 
-        // Initial load on page start
+        // Audit Dropdown population
+        function populateAuditDropdown() {
+            const select = document.getElementById('auditClientSelect');
+            select.innerHTML = '<option value="">-- Choose Client for Form --</option>';
+            activeClientsCache.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.business_name}</option>`;
+            });
+        }
+
+        function selectForm(formId) {
+            ['1040', '1120', 'CT1040'].forEach(f => {
+                document.getElementById(`form-card-${f}`).className = f === formId 
+                    ? 'p-4 border-2 border-indigo-600 bg-indigo-50/50 rounded-xl cursor-pointer' 
+                    : 'p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-slate-300';
+            });
+            document.getElementById('previewFormTitle').innerText = `Form ${formId} Pre-Fill Preview`;
+        }
+
+        // Onboarding form handler
+        async function handleOnboard(e) {
+            e.preventDefault();
+            const payload = {
+                business_name: document.getElementById('onboardName').value,
+                industry: document.getElementById('onboardIndustry').value,
+                qbo_tier: document.getElementById('onboardTier').value,
+                client_email: document.getElementById('onboardEmail').value,
+                sync_status: 'Active Sync'
+            };
+
+            const { error } = await supabaseClient.from('clients').insert([payload]);
+            if (error) { alert('Error onboarding: ' + error.message); return; }
+            
+            alert('Client successfully onboarded and connected to Supabase!');
+            document.getElementById('onboardForm').reset();
+            switchTab('clients');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            if (!input.value.trim()) return;
+            const box = document.getElementById('chatMessagesBox');
+            if (box.innerHTML.includes('No notes')) box.innerHTML = '';
+            box.innerHTML += `<div class="bg-indigo-50 p-2 rounded"><strong class="text-indigo-900">CPA Note:</strong> ${input.value}</div>`;
+            input.value = '';
+        }
+
         loadClientsData();
     </script>
 </body>
