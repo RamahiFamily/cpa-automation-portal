@@ -1,203 +1,542 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CPA Back-Office & Executive Tax Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPA Firm & Tax Automation Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for Financial Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased">
-  <div class="min-h-screen lg:flex">
-    <!-- SIDEBAR -->
-    <aside class="w-full lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 p-5 lg:min-h-screen flex flex-col justify-between">
-      <div>
-        <div class="flex items-center gap-3 mb-8">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center"><i data-lucide="landmark"></i></div>
-          <div><div class="font-semibold">CPA Back-Office</div><div class="text-xs text-slate-400">Enterprise Edition</div></div>
-        </div>
-        <nav class="grid sm:grid-cols-2 lg:grid-cols-1 gap-2 text-sm">
-          <a onclick="switchTab('dashboard')" id="nav-dashboard" class="flex gap-3 items-center rounded-lg bg-slate-800 px-3 py-2.5 text-white cursor-pointer transition"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>Dashboard</a>
-          <a onclick="switchTab('clients')" id="nav-clients" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="building-2" class="w-4 h-4"></i>Clients</a>
-          <a onclick="switchTab('filings')" id="nav-filings" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="file-check-2" class="w-4 h-4"></i>Filings</a>
-          <a onclick="switchTab('audit')" id="nav-audit" class="flex gap-3 items-center rounded-lg px-3 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer transition"><i data-lucide="scan-search" class="w-4 h-4"></i>Audit Center</a>
-        </nav>
-      </div>
-      <div class="pt-4 border-t border-slate-800 text-xs text-slate-500">
-        <p class="font-medium text-slate-300">Mahmoud J. Alramahi</p>
-        <p class="text-[10px]">Lead FP&A Architect</p>
-      </div>
-    </aside>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 min-w-0">
-      <header class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-5 sm:px-8 py-4 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-        <div><p class="text-xs uppercase tracking-widest text-slate-500">Active period</p><h1 class="text-xl font-semibold">October 2026 Q3 Close</h1></div>
-        <button onclick="openOnboardModal()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2.5 transition shadow-lg shadow-emerald-500/20"><i data-lucide="user-plus" class="w-4 h-4"></i>Onboard New Client</button>
-      </header>
-
-      <section class="p-5 sm:p-8 max-w-7xl mx-auto">
-        <!-- VIEW 1: DASHBOARD -->
-        <div id="view-dashboard">
-          <div class="mb-6"><h2 class="text-2xl font-semibold">Executive overview</h2><p class="text-slate-400 mt-1">Client readiness, revenue, filing deadlines, and audit exceptions.</p></div>
-          
-          <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Wholesale Clients</span><i data-lucide="users" class="w-5 h-5 text-sky-400"></i></div><div class="text-3xl font-bold mt-4">42<span class="text-base font-normal text-slate-500">/100</span></div><div class="mt-3 h-1.5 bg-slate-800 rounded-full"><div class="h-full w-[42%] bg-sky-500 rounded-full"></div></div></div>
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Monthly Recurring Revenue</span><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-emerald-400"></i></div><div class="text-3xl font-bold mt-4">$5,250</div><p class="text-xs text-slate-500 mt-3">Current monthly book</p></div>
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Pending Filing Deadlines</span><i data-lucide="calendar-clock" class="w-5 h-5 text-amber-400"></i></div><div class="text-base font-semibold mt-4">CT Town Personal Property</div><p class="text-sm text-amber-300 mt-2">Due Nov 1</p></div>
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl"><div class="flex justify-between"><span class="text-sm text-slate-400">Active Audit Exceptions</span><i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400"></i></div><div class="text-3xl font-bold mt-4">3</div><p class="text-xs text-slate-500 mt-3">Items requiring review</p></div>
-          </div>
-
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-            <div class="p-5 border-b border-slate-800 flex justify-between items-center"><h3 class="font-semibold">Wholesale client filing status</h3><span class="text-xs text-slate-400">Click any row for deep-dive workpapers</span></div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm text-left">
-                <thead class="text-xs uppercase text-slate-500 bg-slate-900/80"><tr><th class="px-5 py-4">Client</th><th class="px-5 py-4">Entity Type</th><th class="px-5 py-4">Last Reconciled</th><th class="px-5 py-4">Pending Filing</th><th class="px-5 py-4">System Status</th></tr></thead>
-                <tbody class="divide-y divide-slate-800">
-                  <tr onclick="openClientModal('Berlin Turnpike Gas Station', 'LLC (1120-S)', '$446,000.00', 'CT Form OS-114', 'Ready to File')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Berlin Turnpike Gas Station</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 15, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Ready to File</span></td></tr>
-                  <tr onclick="openClientModal('Newington Restaurant', 'S Corporation (1065)', '$285,000.00', 'CT Form OS-114', 'Missing Info')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Newington Restaurant</td><td class="px-5 py-4 text-slate-400">S Corporation</td><td class="px-5 py-4">Oct 10, 2026</td><td class="px-5 py-4">CT Form OS-114</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">Missing Info</span></td></tr>
-                  <tr onclick="openClientModal('Rocky Hill Plumbing', 'LLC (1120-S)', '$185,000.00', '1099 Vendor Review', 'Audit Flag')" class="hover:bg-slate-800/60 cursor-pointer transition"><td class="px-5 py-4 font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-400"></span>Rocky Hill Plumbing</td><td class="px-5 py-4 text-slate-400">LLC</td><td class="px-5 py-4">Oct 17, 2026</td><td class="px-5 py-4">1099 Vendor Review</td><td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/10 text-rose-300 border border-rose-500/20">Audit Flag</span></td></tr>
-                </tbody>
-              </table>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex border-r border-slate-800">
+            <div>
+                <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+                    <div class="bg-blue-600 text-white p-2 rounded-lg font-bold">
+                        <i class="fa-solid fa-calculator text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-white font-bold text-base leading-tight">CPA Back-Office</h1>
+                        <span class="text-xs text-slate-400">Tax & Automation Portal</span>
+                    </div>
+                </div>
+                <nav class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium bg-blue-600 text-white transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('clients')" id="nav-clients" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-users w-5"></i>
+                        <span>Clients</span>
+                    </button>
+                    <button onclick="switchTab('filings')" id="nav-filings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-file-invoice-dollar w-5"></i>
+                        <span>Filings & Audit</span>
+                    </button>
+                    <button onclick="switchTab('onboard')" id="nav-onboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
+                        <i class="fa-solid fa-user-plus w-5"></i>
+                        <span>Onboard New Client</span>
+                    </button>
+                </nav>
             </div>
-          </div>
-        </div>
-
-        <!-- VIEW 2: CLIENTS MANAGEMENT -->
-        <div id="view-clients" class="hidden">
-          <div class="mb-6 flex justify-between items-center">
-            <div><h2 class="text-2xl font-semibold">Client Portals Management</h2><p class="text-slate-400 mt-1">Manage QuickBooks API bank feeds and automated general ledger accounts.</p></div>
-            <button onclick="openOnboardModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition">Add Client</button>
-          </div>
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">BT</div>
-                <div><h4 class="font-semibold text-white">Berlin Turnpike Gas Station</h4><p class="text-xs text-slate-400">QBO Connected • Last synced 10m ago</p></div>
-              </div>
-              <span class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20">Active Feed</span>
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center space-x-3 px-4 py-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">M</div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-semibold text-white truncate">Mahmoud Alramahi</p>
+                        <p class="text-[10px] text-slate-400 truncate">FP&A Manager / CPA Admin</p>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">NR</div>
-                <div><h4 class="font-semibold text-white">Newington Restaurant</h4><p class="text-xs text-slate-400">QBO Connected • Pending bank auth</p></div>
-              </div>
-              <span class="text-xs bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20">Action Required</span>
-            </div>
-          </div>
-        </div>
+        </aside>
 
-        <!-- VIEW 3: FILINGS -->
-        <div id="view-filings" class="hidden">
-          <div class="mb-6"><h2 class="text-2xl font-semibold">Tax Filings & PDF Generation</h2><p class="text-slate-400 mt-1">Automated Connecticut OS-114 and federal form preparation queue.</p></div>
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <table class="w-full text-sm text-left">
-              <thead class="text-xs uppercase text-slate-500 bg-slate-900/80"><tr><th class="px-5 py-4">Form / Document</th><th class="px-5 py-4">Jurisdiction</th><th class="px-5 py-4">Due Date</th><th class="px-5 py-4">Status</th></tr></thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr><td class="px-5 py-4 font-medium">CT Form OS-114 (Sales & Use)</td><td class="px-5 py-4 text-slate-400">State of Connecticut</td><td class="px-5 py-4">Nov 30, 2026</td><td class="px-5 py-4"><span class="text-emerald-400 text-xs bg-emerald-500/10 px-2.5 py-1 rounded-full">Ready to E-File</span></td></tr>
-                <tr><td class="px-5 py-4 font-medium">Town Personal Property Decl.</td><td class="px-5 py-4 text-slate-400">Newington / Rocky Hill</td><td class="px-5 py-4">Nov 1, 2026</td><td class="px-5 py-4"><span class="text-amber-400 text-xs bg-amber-500/10 px-2.5 py-1 rounded-full">Pending Signature</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <!-- Top Bar with Global Period Dropdown -->
+            <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center space-x-4">
+                    <button class="md:hidden text-gray-600 hover:text-gray-900"><i class="fa-solid fa-bars text-xl"></i></button>
+                    <h2 id="header-title" class="text-xl font-bold text-gray-800">Firm Overview Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Period Filter Dropdown -->
+                    <div class="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Period:</span>
+                        <select id="global-period" onchange="handlePeriodChange(this.value)" class="bg-transparent text-sm font-medium text-gray-800 focus:outline-none cursor-pointer">
+                            <option value="monthly">Monthly (Current)</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annually">Annually</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="font-medium">QBO & Supabase Synced</span>
+                    </div>
+                </div>
+            </header>
 
-        <!-- VIEW 4: AUDIT CENTER -->
-        <div id="view-audit" class="hidden">
-          <div class="mb-6"><h2 class="text-2xl font-semibold">Audit Exception Center</h2><p class="text-slate-400 mt-1">AI anomaly scanner logs for commingled expenses and missing W-9s.</p></div>
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
-              <i data-lucide="triangle-alert" class="w-5 h-5 text-rose-400 mt-0.5"></i>
-              <div><h4 class="font-semibold text-rose-300">Missing W-9 Form — Rocky Hill Plumbing</h4><p class="text-xs text-rose-200/80 mt-1">Subcontractor paid $1,850 via Zelle with no W-9 on file. Automated text prompt dispatched.</p></div>
-            </div>
-            <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
-              <i data-lucide="alert-circle" class="w-5 h-5 text-amber-400 mt-0.5"></i>
-              <div><h4 class="font-semibold text-amber-300">Possible Commingled Personal Expense — Newington Restaurant</h4><p class="text-xs text-amber-200/80 mt-1">Found charge at Netflix ($22.99) on business operating card. Marked for client review.</p></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+            <!-- Dynamic Views Container -->
+            <div class="p-8 max-w-7xl mx-auto w-full">
 
-  <!-- CLIENT DEEP-DIVE MODAL -->
-  <div id="clientModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-      <button onclick="closeClientModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center"><i data-lucide="file-spreadsheet"></i></div>
-        <div><h3 id="modalClientName" class="text-lg font-bold text-white">Client Name</h3><p id="modalClientEntity" class="text-xs text-slate-400">Entity Type</p></div>
-      </div>
-      <div class="space-y-3 py-3 border-y border-slate-800 my-4 text-sm">
-        <div class="flex justify-between"><span class="text-slate-400">YTD Gross Revenue:</span><span id="modalRevenue" class="font-semibold text-white">$0.00</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Pending Tax Filing:</span><span id="modalFiling" class="font-semibold text-amber-400">Form</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">System Status:</span><span id="modalStatus" class="font-semibold text-emerald-400">Status</span></div>
-      </div>
-      <div class="flex justify-end gap-3 mt-6">
-        <button onclick="closeClientModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition">Close</button>
-        <button onclick="alert('Workpaper packet downloaded successfully.')" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-semibold transition">Download Workpapers (.xlsx)</button>
-      </div>
+                <!-- VIEW 1: DASHBOARD -->
+                <section id="view-dashboard" class="space-y-6">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Active Business Clients</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">24</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> +2 this month</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (MTD)</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">$482,900</p>
+                            <span class="text-xs text-green-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up"></i> +12.4% vs last period</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Pending Tax Filings</p>
+                            <p class="text-3xl font-bold text-amber-600 mt-2">5</p>
+                            <span class="text-xs text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-clock"></i> Due in &lt; 10 days</span>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Audit Flags Resolved</p>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">18/19</p>
+                            <span class="text-xs text-blue-600 font-medium mt-1 inline-block"><i class="fa-solid fa-check"></i> 94.7% clean rate</span>
+                        </div>
+                    </div>
+
+                    <!-- Chart & Quick Summary Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
+                            <h3 class="text-base font-bold text-gray-800 mb-4">Firm-Wide Revenue vs. Expenses</h3>
+                            <div class="h-72">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-800 mb-4">Recent QBO Webhook Syncs</h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span class="font-medium text-gray-700">Metro Gas Station #4</span>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 2m ago</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span class="font-medium text-gray-700">Express Plumbing LLC</span>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 14m ago</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span class="font-medium text-gray-700">Downtown Bistro</span>
+                                        <span class="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Pending CDC</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pb-2">
+                                        <span class="font-medium text-gray-700">CT Rideshare Fleet</span>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Synced 1h ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('clients')" class="w-full mt-4 bg-slate-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
+                                View All Clients
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: CLIENTS TABLE -->
+                <section id="view-clients" class="hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">Client Roster</h3>
+                                <p class="text-xs text-gray-500">Click any client row to view detailed filings, expenses, and Chart of Accounts.</p>
+                            </div>
+                            <button onclick="switchTab('onboard')" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fa-solid fa-plus mr-2"></i>Add Client
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-4">Client Name</th>
+                                        <th class="px-6 py-4">Business Profile</th>
+                                        <th class="px-6 py-4">QBO Tier</th>
+                                        <th class="px-6 py-4">Status</th>
+                                        <th class="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 text-sm">
+                                    <tr onclick="openClientDetail('Metro Gas Station #4', 'Gas Station / Convenience', 'Advanced')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-gray-900">Metro Gas Station #4</td>
+                                        <td class="px-6 py-4 text-gray-600">Gas Station</td>
+                                        <td class="px-6 py-4 text-gray-600">Advanced</td>
+                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
+                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                                    </tr>
+                                    <tr onclick="openClientDetail('Express Plumbing LLC', 'Plumbing & Contracting', 'Essentials')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-gray-900">Express Plumbing LLC</td>
+                                        <td class="px-6 py-4 text-gray-600">Plumber (Cash/Invoice)</td>
+                                        <td class="px-6 py-4 text-gray-600">Essentials</td>
+                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
+                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                                    </tr>
+                                    <tr onclick="openClientDetail('Downtown Bistro', 'Restaurant & Bar', 'Plus')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-gray-900">Downtown Bistro</td>
+                                        <td class="px-6 py-4 text-gray-600">Restaurant</td>
+                                        <td class="px-6 py-4 text-gray-600">Plus</td>
+                                        <td class="px-6 py-4"><span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-medium">Token Refresh Due</span></td>
+                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                                    </tr>
+                                    <tr onclick="openClientDetail('CT Rideshare Fleet', 'Transportation & Delivery', 'Simple Start')" class="hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-gray-900">CT Rideshare Fleet</td>
+                                        <td class="px-6 py-4 text-gray-600">Rideshare Driver</td>
+                                        <td class="px-6 py-4 text-gray-600">Simple Start</td>
+                                        <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Active Sync</span></td>
+                                        <td class="px-6 py-4 text-right text-blue-600 font-medium">View File &rarr;</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2.5: INDIVIDUAL CLIENT DEEP DIVE (Hidden by default) -->
+                <section id="view-client-detail" class="hidden space-y-6">
+                    <div class="flex items-center justify-between">
+                        <button onclick="switchTab('clients')" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-2">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>Back to Client Roster</span>
+                        </button>
+                        <div class="space-x-2">
+                            <button onclick="alert('Exporting CPA workpapers & trial balance CSV...')" class="bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-800">
+                                <i class="fa-solid fa-download mr-1.5"></i>Export Workpapers
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Client Header Card -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <span id="detail-badge" class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Gas Station</span>
+                            <h2 id="detail-name" class="text-2xl font-bold text-gray-900 mt-1">Metro Gas Station #4</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">QuickBooks Online Tier: <span id="detail-tier" class="font-semibold text-gray-700">Advanced</span> | Last CDC Sync: Today, 08:30 AM</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 text-right">
+                                <p class="text-[10px] text-gray-500 uppercase font-semibold">Net P&L (Selected Period)</p>
+                                <p class="text-lg font-bold text-green-600">$42,850.00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Financial & Tax Sub-Tabs -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left 2 Cols: Expenses, Chart of Accounts & Filings -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Expenses & Financial Breakdown -->
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-base font-bold text-gray-800 mb-4">Expenses & Operating Breakdown</h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium text-gray-700">Cost of Goods Sold (COGS - Fuel/Inventory)</span>
+                                        <span class="font-bold text-gray-900">$184,200.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium text-gray-700">Payroll & Contractor Expenses</span>
+                                        <span class="font-bold text-gray-900">$18,400.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium text-gray-700">Utilities & Facility Maintenance</span>
+                                        <span class="font-bold text-gray-900">$4,250.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-medium text-gray-700">State Sales Tax Remittance (CT OS-114)</span>
+                                        <span class="font-bold text-gray-900">$6,820.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chart of Accounts Snapshot -->
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-base font-bold text-gray-800 mb-4">QBO Chart of Accounts</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th class="px-4 py-3">Account #</th>
+                                                <th class="px-4 py-3">Account Name</th>
+                                                <th class="px-4 py-3">Type</th>
+                                                <th class="px-4 py-3 text-right">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 text-xs">
+                                            <tr>
+                                                <td class="px-4 py-3 font-mono">1010</td>
+                                                <td class="px-4 py-3 font-medium">Operating Checking Account</td>
+                                                <td class="px-4 py-3 text-gray-500">Bank</td>
+                                                <td class="px-4 py-3 text-right font-bold">$68,400.10</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-3 font-mono">1200</td>
+                                                <td class="px-4 py-3 font-medium">Accounts Receivable (A/R)</td>
+                                                <td class="px-4 py-3 text-gray-500">Current Asset</td>
+                                                <td class="px-4 py-3 text-right font-bold">$12,350.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-3 font-mono">2000</td>
+                                                <td class="px-4 py-3 font-medium">Accounts Payable (A/P)</td>
+                                                <td class="px-4 py-3 text-gray-500">Current Liability</td>
+                                                <td class="px-4 py-3 text-right font-bold">$9,100.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Col: Tax Preparation & CPA Notes -->
+                        <div class="space-y-6">
+                            <!-- Tax Filing Data -->
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-base font-bold text-gray-800 mb-4">Tax Filing Prep</h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p class="text-xs font-semibold text-blue-800 uppercase">Filing Status</p>
+                                        <p class="text-sm font-bold text-blue-900 mt-0.5">Ready for CPA Review</p>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <p class="text-xs text-gray-500 font-semibold">Estimated Federal Liability</p>
+                                        <p class="text-base font-bold text-gray-800">$8,940.00</p>
+                                    </div>
+                                    <button onclick="alert('Filing package verified & locked for CPA submission.')" class="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-colors">
+                                        Approve & Lock Return
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- CPA Firm Internal Notes -->
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-base font-bold text-gray-800 mb-4">CPA Firm Notes</h3>
+                                <textarea class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Add internal review notes or audit reminders here...">Client reconciled inventory logs with fuel distributor invoices. No material variances found.</textarea>
+                                <button onclick="alert('Note saved to Supabase audit log.')" class="mt-3 w-full bg-slate-900 text-white text-xs font-semibold py-2 rounded-lg hover:bg-slate-800">
+                                    Save Note
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: FILINGS & AUDIT CENTER -->
+                <section id="view-filings" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Filings Section -->
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Compliance Filings Schedule</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p class="font-bold text-gray-900 text-sm">CT Sales & Use Tax (OS-114)</p>
+                                        <p class="text-xs text-gray-500">Metro Gas Station #4 • Due Oct 31, 2026</p>
+                                    </div>
+                                    <span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-medium">Due Soon</span>
+                                </div>
+                                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p class="font-bold text-gray-900 text-sm">Federal Quarterly Estimate (1120-W)</p>
+                                        <p class="text-xs text-gray-500">Express Plumbing LLC • Due Dec 15, 2026</p>
+                                    </div>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">Prepared</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Center -->
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Audit Center & Anomaly Detection</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                    <div class="flex items-center space-x-2 text-red-700 font-bold text-sm">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>Unusual Expense Spike Flagged</span>
+                                    </div>
+                                    <p class="text-xs text-red-600 mt-1">Downtown Bistro reported a 45% increase in miscellaneous expenses without corresponding revenue growth.</p>
+                                </div>
+                                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-center space-x-2 text-amber-700 font-bold text-sm">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                        <span>Missing Receipt Attachment</span>
+                                    </div>
+                                    <p class="text-xs text-amber-600 mt-1">Express Plumbing LLC has 2 transactions over $500 missing required OCR receipt verification.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: ONBOARD NEW CLIENT -->
+                <section id="view-onboard" class="hidden space-y-6">
+                    <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Onboard New Business Client</h3>
+                        <p class="text-xs text-gray-500 mb-6">Initialize a new client profile and trigger the secure Intuit OAuth connection link.</p>
+                        
+                        <form onsubmit="event.preventDefault(); alert('Client profile created in Supabase! OAuth connection invite sent.'); switchTab('clients');" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Business Legal Name</label>
+                                <input type="text" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., New England Restaurant Group LLC">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Industry Profile</label>
+                                    <select class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option>Gas Station / Convenience</option>
+                                        <option>Cash-Only Plumber / Contractor</option>
+                                        <option>Restaurant / Hospitality</option>
+                                        <option>Rideshare / Delivery Fleet</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">QuickBooks Edition</label>
+                                    <select class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option>Simple Start</option>
+                                        <option>Essentials</option>
+                                        <option>Plus</option>
+                                        <option>Advanced</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Client Email (For QBO OAuth Authorization)</label>
+                                <input type="email" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="owner@businessdomain.com">
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                Generate QBO Connect Link & Initialize Profile
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+        </main>
     </div>
-  </div>
 
-  <!-- ONBOARDING MODAL -->
-  <div id="onboardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button onclick="closeOnboardModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-      <h3 class="text-lg font-bold text-white mb-2">Onboard New Wholesale Client</h3>
-      <p class="text-xs text-slate-400 mb-4">Connect QuickBooks API and auto-provision bank feeds.</p>
-      <div class="space-y-3">
-        <div><label class="block text-xs text-slate-400 mb-1">Business Name</label><input type="text" placeholder="e.g. Hartford Auto Repair LLC" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></div>
-        <div><label class="block text-xs text-slate-400 mb-1">Entity Classification</label><select class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"><option>LLC (1120-S)</option><option>Partnership (1065)</option><option>Sole Proprietorship (Sch C)</option><option>C-Corporation (1120)</option></select></div>
-      </div>
-      <div class="flex justify-end gap-3 mt-6">
-        <button onclick="closeOnboardModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition">Cancel</button>
-        <button onclick="alert('Client successfully provisioned and queued for automated reconciliation!'); closeOnboardModal();" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-semibold transition">Provision Client</button>
-      </div>
-    </div>
-  </div>
+    <!-- JavaScript Controller Logic -->
+    <script>
+        let revenueChartInstance = null;
 
-  <!-- INTERACTIVE JS ENGINE -->
-  <script>
-    lucide.createIcons();
+        function switchTab(tabId) {
+            // Hide all views
+            ['dashboard', 'clients', 'client-detail', 'filings', 'onboard'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+            });
 
-    function switchTab(tabId) {
-      ['dashboard', 'clients', 'filings', 'audit'].forEach(id => {
-        document.getElementById('view-' + id).classList.add('hidden');
-        document.getElementById('nav-' + id).classList.remove('bg-slate-800', 'text-white');
-        document.getElementById('nav-' + id).classList.add('text-slate-400');
-      });
-      document.getElementById('view-' + tabId).classList.remove('hidden');
-      document.getElementById('nav-' + tabId).classList.add('bg-slate-800', 'text-white');
-      document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
-    }
+            // Remove active styles from sidebar nav buttons
+            ['dashboard', 'clients', 'filings', 'onboard'].forEach(n => {
+                const btn = document.getElementById(`nav-${n}`);
+                if(btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('hover:bg-slate-800', 'hover:text-white');
+                }
+            });
 
-    function openClientModal(name, entity, revenue, filing, status) {
-      document.getElementById('modalClientName').innerText = name;
-      document.getElementById('modalClientEntity').innerText = entity;
-      document.getElementById('modalRevenue').innerText = revenue;
-      document.getElementById('modalFiling').innerText = filing;
-      document.getElementById('modalStatus').innerText = status;
-      document.getElementById('clientModal').classList.remove('hidden');
-      document.getElementById('clientModal').classList.add('flex');
-    }
+            // Show selected view
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
-    function closeClientModal() {
-      document.getElementById('clientModal').classList.remove('flex');
-      document.getElementById('clientModal').classList.add('hidden');
-    }
+            // Highlight nav button if applicable
+            if(['dashboard', 'clients', 'filings', 'onboard'].includes(tabId)) {
+                const activeBtn = document.getElementById(`nav-${tabId}`);
+                if(activeBtn) {
+                    activeBtn.classList.remove('hover:bg-slate-800', 'hover:text-white');
+                    activeBtn.classList.add('bg-blue-600', 'text-white');
+                }
+            }
 
-    function openOnboardModal() {
-      document.getElementById('onboardModal').classList.remove('hidden');
-      document.getElementById('onboardModal').classList.add('flex');
-    }
+            // Update header title
+            const titles = {
+                'dashboard': 'Firm Overview Dashboard',
+                'clients': 'Client Roster & Accounts',
+                'client-detail': 'Client Financial File & Tax Prep',
+                'filings': 'Compliance Filings & Audit Center',
+                'onboard': 'Onboard New Business Client'
+            };
+            document.getElementById('header-title').innerText = titles[tabId] || 'CPA Portal';
 
-    function closeOnboardModal() {
-      document.getElementById('onboardModal').classList.remove('flex');
-      document.getElementById('onboardModal').classList.add('hidden');
-    }
-  </script>
+            // Init chart if dashboard is shown
+            if(tabId === 'dashboard' && !revenueChartInstance) {
+                initChart('monthly');
+            }
+        }
+
+        function openClientDetail(name, profile, tier) {
+            document.getElementById('detail-name').innerText = name;
+            document.getElementById('detail-badge').innerText = profile;
+            document.getElementById('detail-tier').innerText = tier;
+            switchTab('client-detail');
+        }
+
+        function handlePeriodChange(period) {
+            // Re-render chart or update KPI numbers based on dropdown selection (Monthly / Quarterly / Annually)
+            if(revenueChartInstance) {
+                if(period === 'monthly') {
+                    revenueChartInstance.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    revenueChartInstance.data.datasets[0].data = [110000, 125000, 118000, 129900];
+                    revenueChartInstance.data.datasets[1].data = [82000, 91000, 85000, 94000];
+                } else if(period === 'quarterly') {
+                    revenueChartInstance.data.labels = ['Month 1', 'Month 2', 'Month 3'];
+                    revenueChartInstance.data.datasets[0].data = [450000, 480000, 482900];
+                    revenueChartInstance.data.datasets[1].data = [340000, 360000, 355000];
+                } else {
+                    revenueChartInstance.data.labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+                    revenueChartInstance.data.datasets[0].data = [1350000, 1420000, 1390000, 1482900];
+                    revenueChartInstance.data.datasets[1].data = [1020000, 1080000, 1050000, 1110000];
+                }
+                revenueChartInstance.update();
+            }
+        }
+
+        function initChart(period) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            revenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [
+                        {
+                            label: 'Revenue ($)',
+                            data: [110000, 125000, 118000, 129900],
+                            backgroundColor: '#2563eb',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Expenses ($)',
+                            data: [82000, 91000, 85000, 94000],
+                            backgroundColor: '#94a3b8',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Initialize chart on load
+        window.onload = () => {
+            initChart('monthly');
+        };
+    </script>
 </body>
 </html>
