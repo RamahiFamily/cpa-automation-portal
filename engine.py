@@ -1,7 +1,7 @@
 """Financial processing engine for a CPA automation portal.
 
-The module provides review-oriented automation. Thresholds and rates are
-configurable and should be verified for the applicable tax period before use.
+Provides review-oriented automation with hardened error handling, safe index parsing,
+and optional Supabase synchronization.
 """
 from __future__ import annotations
 
@@ -12,30 +12,47 @@ import math
 import os
 
 import pandas as pd
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+    HAS_SUPABASE = True
+except ImportError:
+    HAS_SUPABASE = False
 
 logger = logging.getLogger(__name__)
 
+# ==============================================================================
+# CONFIGURATION & CREDENTIALS BLOCK
+# (All hardcoded endpoints, keys, and default business rules are defined here)
+# ==============================================================================
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjE0NDY5NSwiZXhwIjoyMTA3NzIwNjk1fQ.Il0Zh9j1JePWFk_VOubRQOdPTvdu8ivAzZSLHfEqglE")
 
 @dataclass(frozen=True)
 class EngineConfig:
-    sales_tax_rate: float = 0.0635
-    meals_tax_rate: float = 0.0735
-    capitalization_threshold: float = 2500.0
-    nec_vendor_threshold: float = 600.0
+    sales_tax_rate: float = 0.0635          # Connecticut State Sales Tax Rate
+    meals_tax_rate: float = 0.0735          # Connecticut Meals Tax Rate
+    capitalization_threshold: float = 2500.0 # Section 179 / Fixed Asset threshold
+    nec_vendor_threshold: float = 600.0     # 1099-NEC review threshold
     personal_merchants: tuple[str, ...] = ("stew leonard's", "netflix")
+# ==============================================================================
 
 
 class CPAAutomationEngine:
-    """Run accounting review checks and generate tax/accounting summaries with Supabase sync."""
+    """Run accounting review checks and generate tax/accounting summaries."""
 
     def __init__(self, config: Optional[EngineConfig] = None) -> None:
         self.config = config or EngineConfig()
+        self.supabase: Optional[Client] = None
         
-        # Initialize abase Client using environment secrets
-        supabase_url = os.environ.get("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
-        self.supabase: Client = create_client(supabase_url, supabase_key)
+        # Safely initialize Supabase using the top-level configuration
+        if HAS_SUPABASE and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and "YOUR_" not in SUPABASE_URL:
+            try:
+                self.supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+                logger.info("Supabase client initialized successfully.")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Supabase client: {e}")
+        else:
+            logger.info("Running in offline/local mode (Supabase sync disabled).")
 
     @staticmethod
     def _require_columns(df: pd.DataFrame, required: Iterable[str]) -> None:
@@ -87,9 +104,12 @@ class CPAAutomationEngine:
             if bool(row["is_1099_vendor"]) and amount >= self.config.nec_vendor_threshold and not bool(row["w9_on_file"]):
                 flags.append("Missing W-9 for vendor at/over configured 1099-NEC review threshold")
 
+            # Safely handle non-integer DataFrame indices
+            source_idx = int(idx) if isinstance(idx, (int, pd.Int64Dtype)) else str(idx)
+
             for flag in flags:
                 finding = {
-                    "source_index": int(idx),
+                    "source_index": source_idx,
                     "date": str(row["date"]),
                     "vendor": vendor,
                     "amount": amount,
@@ -101,8 +121,8 @@ class CPAAutomationEngine:
 
         results_df = pd.DataFrame(findings, columns=["source_index", "date", "vendor", "amount", "flag"])
 
-        # Push findings to Supabase audit log if configured
-        if findings and client_id:
+        # Push findings to Supabase if connected
+        if findings and client_id and self.supabase:
             try:
                 self.supabase.table("audit_flags").upsert(findings).execute()
                 logger.info(f"Successfully synced {len(findings)} audit flags to Supabase.")
