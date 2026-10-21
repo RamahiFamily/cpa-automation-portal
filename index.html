@@ -703,7 +703,7 @@
             }
         }
 
-       async function handleShoeboxUpload(files) {
+      async function handleShoeboxUpload(files) {
             const statusDiv = document.getElementById('shoeboxUploadStatus');
             if (!files || files.length === 0) return;
 
@@ -713,21 +713,23 @@
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     
-                    // Convert file to Base64 for Supabase Edge Function / Gemini processing
                     const base64Data = await new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = () => resolve(reader.result.split(',')[1]);
                         reader.readAsDataURL(file);
                     });
 
-                    // Call Supabase Edge Function securely
+                    // Invoke Supabase Edge Function with correct authorization header
                     const { data: aiResult, error: fnError } = await supabaseClient.functions.invoke('extract-shoebox', {
-                        body: { imageBase64: base64Data, fileName: file.name }
+                        body: { imageBase64: base64Data, fileName: file.name },
+                        headers: {
+                            Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+                        }
                     });
 
                     if (fnError) throw fnError;
+                    if (!aiResult || !aiResult.success) throw new Error(aiResult?.error || "Extraction failed");
 
-                    // Insert real AI-extracted data into Supabase document_staging table
                     const payload = {
                         document_type: aiResult.data.document_type || 'receipt',
                         entity_name: aiResult.data.entity_name || file.name.replace(/\.[^/.]+$/, ""),
@@ -751,6 +753,8 @@
             } catch (err) {
                 console.error("AI Upload error:", err);
                 statusDiv.innerHTML = `<span class="text-rose-600 font-semibold">❌ AI Extraction failed: ${err.message}</span>`;
+            }
+        }
             }
         }
         async function approveAndAssign(itemId) {
