@@ -653,6 +653,10 @@
         // =========================================================================
         // AI SHOEBOX & STAGING QUEUE FUNCTIONS (REAL GEMINI AI EXTRACTION)
         // =========================================================================
+        
+        git add index.html
+        git commit -m "Fix shoebox staging upload direct to Supabase"
+        git push origin main
         async function loadStagingQueue() {
             const tbody = document.getElementById('stagingTableBody');
             tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Loading pending staging documents from Supabase...</td></tr>`;
