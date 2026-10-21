@@ -13,7 +13,7 @@ from PIL import Image, ImageOps
 try:
     from google import genai
     from google.genai import types
-    from google.genai.errors import ServerError
+    from google.genai.errors import APIError, ServerError
     HAS_GENAI = True
 except ImportError:
     HAS_GENAI = False
@@ -26,12 +26,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class EngineConfig:
-    sales_tax_rate: float = 0.0635          # Connecticut State Sales Tax Rate
-    meals_tax_rate: float = 0.0735          # Connecticut Meals Tax Rate
+    sales_tax_rate: float = 0.0635           # Connecticut State Sales Tax Rate
+    meals_tax_rate: float = 0.0735           # Connecticut Meals Tax Rate
     capitalization_threshold: float = 2500.0 # Section 179 / Fixed Asset threshold
-    nec_vendor_threshold: float = 600.0     # 1099-NEC review threshold
+    nec_vendor_threshold: float = 600.0      # 1099-NEC review threshold
     personal_merchants: tuple[str, ...] = ("stew leonard's", "netflix")
 
 
@@ -43,9 +44,9 @@ class CPAAutomationEngine:
         self.supabase: Optional[Client] = None
         self.gemini_client = None
 
-        GEMINI_API_KEY = os.getenv("AQ.Ab8RN6I4zOLeQazmkuXneEPx0WRGcmdTVVRoHEy6pZtKxvarwg")
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co")
-        SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
+        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
 
         if HAS_GENAI and GEMINI_API_KEY:
             try:
@@ -79,67 +80,61 @@ class CPAAutomationEngine:
             raise ValueError(f"{field} must be a finite non-negative number")
         return number
 
+    def _call_gemini_json(self, contents: list[Any]) -> Dict[str, Any]:
+        """Call Gemini Flash with automatic model fallback and strict JSON output."""
+        if not self.gemini_client:
+            raise RuntimeError("Gemini AI client is not initialized. Set the GEMINI_API_KEY environment variable.")
+
+        models_to_try = ("gemini-2.5-flash", "gemini-2.0-flash")
+        last_err: Optional[Exception] = None
+
+        for model_name in models_to_try:
+            for attempt in range(2):
+                try:
+                    response = self.gemini_client.models.generate_content(
+                        model=model_name,
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.0,
+                        ),
+                    )
+                    return json.loads(response.text)
+                except Exception as exc:
+                    last_err = exc
+        raise RuntimeError(f"Gemini extraction failed: {last_err}")
+
     def process_shoebox_document(self, image_file_path: str) -> Dict[str, Any]:
         """
         Classifies and extracts summary data from shoebox documents (Receipts, Invoices, Bills, Bank Statements)
-        using Gemini 3.8 Flash, and automatically stages them into Supabase.
+        using Gemini Flash, and automatically stages them into Supabase.
         """
-        if not self.gemini_client:
-            raise RuntimeError("Gemini AI client is not initialized. Provide a valid GEMINI_API_KEY environment variable.")
-
         img = Image.open(image_file_path)
         img = ImageOps.exif_transpose(img)
 
-        classifier_prompt = """
-        Classify this document image into EXACTLY ONE of the following categories:
-        - "receipt" (Retail or store purchase receipt)
-        - "invoice" (Account receivable invoice issued to a client)
-        - "bill" (Vendor bill, utility statement, or payable expense)
-        - "bank_statement" (Bank or credit card statement summary)
-        Return strictly a JSON object with this key: {"document_type": "..."}
+        prompt = """
+        Analyze this financial document image and return strict JSON with these exact keys:
+        - "document_type": one of "receipt", "invoice", "bill", or "bank_statement"
+        - "entity_name": Merchant, Vendor, Customer, or Bank Name printed on the document
+        - "document_date": Date on the document in YYYY-MM-DD format
+        - "subtotal": float
+        - "tax_amount": float
+        - "total_amount": float
         """
 
-        class_response = self.gemini_client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=[img, classifier_prompt],
-            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.0)
-        )
-        doc_class = json.loads(class_response.text).get("document_type", "receipt")
-
-        extraction_prompt = """
-        Extract summary details from this document:
-        - entity_name (Merchant, Vendor, or Bank Name)
-        - document_date (Format YYYY-MM-DD)
-        - subtotal (float)
-        - tax_amount (float)
-        - total_amount (float)
-        Return strict JSON matching this exact schema:
-        {"entity_name": "...", "document_date": "YYYY-MM-DD", "subtotal": 0.00, "tax_amount": 0.00, "total_amount": 0.00}
-        """
-
-        response = None
-        for attempt in range(3):
-            try:
-                response = self.gemini_client.models.generate_content(
-                    model='gemini-3.8-flash',
-                    contents=[img, extraction_prompt],
-                    config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.0),
-                )
-                break
-            except ServerError:
-                if attempt == 2:
-                    raise
-
-        extracted_data = json.loads(response.text)
+        extracted_data = self._call_gemini_json([img, prompt])
+        doc_class = extracted_data.get("document_type", "receipt")
+        if doc_class not in ("receipt", "invoice", "bill", "bank_statement"):
+            doc_class = "receipt"
 
         payload = {
             "document_type": doc_class,
             "entity_name": extracted_data.get("entity_name") or "Unknown Merchant",
             "document_date": extracted_data.get("document_date") or None,
-            "subtotal": float(extracted_data.get("subtotal") or 0.0),
-            "tax_amount": float(extracted_data.get("tax_amount") or 0.0),
-            "total_amount": float(extracted_data.get("total_amount") or 0.0),
-            "status": "pending"
+            "subtotal": round(float(extracted_data.get("subtotal") or 0.0), 2),
+            "tax_amount": round(float(extracted_data.get("tax_amount") or 0.0), 2),
+            "total_amount": round(float(extracted_data.get("total_amount") or 0.0), 2),
+            "status": "pending",
         }
 
         if self.supabase:
