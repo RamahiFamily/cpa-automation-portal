@@ -27,7 +27,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# CONFIGURATION & CREDENTIALS BLOCK
+# CONFIGURATION BLOCK
 # ==============================================================================
 @dataclass(frozen=True)
 class EngineConfig:
@@ -48,15 +48,15 @@ class CPAAutomationEngine:
         self.gemini_client = None
 
         # ======================================================================
-        # HARDCODED CREDENTIALS (PASTE YOUR KEYS HERE)
+        # SECURE CREDENTIAL LOADING VIA ENVIRONMENT VARIABLES
         # ======================================================================
-        GEMINI_API_KEY = "AIzaSyCaiiI9adQIe-eCf96e6hTZHRiHwENv3xk"
-        SUPABASE_URL = "https://vgzymkfrtdqizytadyjf.supabase.co"
-        SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0"
+        GEMINI_API_KEY = os.getenv("AQ.Ab8RN6LosNl-WNs4iY1eOUmejqxtTBBODwzY8Qyee9qXhNsWWw")
+        SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co")
+        SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
         # ======================================================================
 
         # Initialize Gemini Client
-        if HAS_GENAI and GEMINI_API_KEY and "PASTE_" not in GEMINI_API_KEY:
+        if HAS_GENAI and GEMINI_API_KEY:
             try:
                 self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
                 logger.info("Gemini AI client initialized successfully.")
@@ -64,14 +64,14 @@ class CPAAutomationEngine:
                 logger.warning(f"Failed to initialize Gemini client: {e}")
 
         # Initialize Supabase Client
-        if HAS_SUPABASE and SUPABASE_URL and SUPABASE_KEY and "YOUR_" not in SUPABASE_URL and "PASTE_" not in SUPABASE_KEY:
+        if HAS_SUPABASE and SUPABASE_URL and SUPABASE_KEY:
             try:
                 self.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
                 logger.info("Supabase client initialized successfully.")
             except Exception as e:
                 logger.warning(f"Failed to initialize Supabase client: {e}")
         else:
-            logger.info("Running in offline/local mode (Supabase sync disabled).")
+            logger.info("Running in offline/local mode (Supabase credentials not found in environment variables).")
 
     @staticmethod
     def _require_columns(df: pd.DataFrame, required: Iterable[str]) -> None:
@@ -95,7 +95,7 @@ class CPAAutomationEngine:
         using Gemini 3.8 Flash, and automatically stages them into Supabase.
         """
         if not self.gemini_client:
-            raise RuntimeError("Gemini AI client is not initialized. Provide a valid GEMINI_API_KEY.")
+            raise RuntimeError("Gemini AI client is not initialized. Provide a valid GEMINI_API_KEY environment variable.")
 
         # 1. Load and orient image
         img = Image.open(image_file_path)
