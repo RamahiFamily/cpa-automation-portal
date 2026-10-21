@@ -1,17 +1,23 @@
-"""Financial processing engine for a CPA automation portal.
-
-Provides review-oriented automation with hardened error handling, safe index parsing,
-and optional Supabase synchronization.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Mapping, Optional
+import json
 import logging
 import math
 import os
 
 import pandas as pd
+from PIL import Image, ImageOps
+
+try:
+    from google import genai
+    from google.genai import types
+    from google.genai.errors import ServerError
+    HAS_GENAI = True
+except ImportError:
+    HAS_GENAI = False
+
 try:
     from supabase import create_client, Client
     HAS_SUPABASE = True
@@ -22,11 +28,7 @@ logger = logging.getLogger(__name__)
 
 # ==============================================================================
 # CONFIGURATION & CREDENTIALS BLOCK
-# (All hardcoded endpoints, keys, and default business rules are defined here)
 # ==============================================================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co/rest/v1/")
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjE0NDY5NSwiZXhwIjoyMTA3NzIwNjk1fQ.Il0Zh9j1JePWFk_VOubRQOdPTvdu8ivAzZSLHfEqglE")
-
 @dataclass(frozen=True)
 class EngineConfig:
     sales_tax_rate: float = 0.0635          # Connecticut State Sales Tax Rate
@@ -38,16 +40,33 @@ class EngineConfig:
 
 
 class CPAAutomationEngine:
-    """Run accounting review checks and generate tax/accounting summaries."""
+    """Run accounting review checks, tax estimates, and AI shoebox document extraction."""
 
     def __init__(self, config: Optional[EngineConfig] = None) -> None:
         self.config = config or EngineConfig()
         self.supabase: Optional[Client] = None
-        
-        # Safely initialize Supabase using the top-level configuration
-        if HAS_SUPABASE and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and "YOUR_" not in SUPABASE_URL:
+        self.gemini_client = None
+
+        # ======================================================================
+        # HARDCODED CREDENTIALS (PASTE YOUR KEYS HERE)
+        # ======================================================================
+        GEMINI_API_KEY = "AIzaSyCaiiI9adQIe-eCf96e6hTZHRiHwENv3xk"
+        SUPABASE_URL = "https://vgzymkfrtdqizytadyjf.supabase.co"
+        SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0"
+        # ======================================================================
+
+        # Initialize Gemini Client
+        if HAS_GENAI and GEMINI_API_KEY and "PASTE_" not in GEMINI_API_KEY:
             try:
-                self.supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                logger.info("Gemini AI client initialized successfully.")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Gemini client: {e}")
+
+        # Initialize Supabase Client
+        if HAS_SUPABASE and SUPABASE_URL and SUPABASE_KEY and "YOUR_" not in SUPABASE_URL and "PASTE_" not in SUPABASE_KEY:
+            try:
+                self.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
                 logger.info("Supabase client initialized successfully.")
             except Exception as e:
                 logger.warning(f"Failed to initialize Supabase client: {e}")
@@ -69,6 +88,84 @@ class CPAAutomationEngine:
         if not math.isfinite(number) or number < 0:
             raise ValueError(f"{field} must be a finite non-negative number")
         return number
+
+    def process_shoebox_document(self, image_file_path: str) -> Dict[str, Any]:
+        """
+        Classifies and extracts summary data from shoebox documents (Receipts, Invoices, Bills, Statements)
+        using Gemini 3.8 Flash, and automatically stages them into Supabase.
+        """
+        if not self.gemini_client:
+            raise RuntimeError("Gemini AI client is not initialized. Provide a valid GEMINI_API_KEY.")
+
+        # 1. Load and orient image
+        img = Image.open(image_file_path)
+        img = ImageOps.exif_transpose(img)
+
+        # 2. Document Classification Prompt
+        classifier_prompt = """
+        Classify this document image into EXACTLY ONE of the following categories:
+        - "receipt" (Retail or store purchase receipt)
+        - "invoice" (Account receivable invoice issued to a client)
+        - "bill" (Vendor bill, utility statement, or payable expense)
+        - "bank_statement" (Bank or credit card statement summary)
+        Return strictly a JSON object with this key: {"document_type": "..."}
+        """
+
+        class_response = self.gemini_client.models.generate_content(
+            model='gemini-3.8-flash',
+            contents=[img, classifier_prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.0)
+        )
+        doc_class = json.loads(class_response.text).get("document_type", "receipt")
+
+        # 3. Dynamic Extraction Schema Selection
+        extraction_prompt = """
+        Extract summary details from this document:
+        - entity_name (Merchant, Vendor, or Bank Name)
+        - document_date (Format YYYY-MM-DD)
+        - subtotal (float)
+        - tax_amount (float)
+        - total_amount (float)
+        Return strict JSON matching this exact schema:
+        {"entity_name": "...", "document_date": "YYYY-MM-DD", "subtotal": 0.00, "tax_amount": 0.00, "total_amount": 0.00}
+        """
+
+        # 4. Call Gemini 3.8 Flash with auto-retry logic
+        response = None
+        for attempt in range(3):
+            try:
+                response = self.gemini_client.models.generate_content(
+                    model='gemini-3.8-flash',
+                    contents=[img, extraction_prompt],
+                    config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.0),
+                )
+                break
+            except ServerError:
+                if attempt == 2:
+                    raise
+
+        extracted_data = json.loads(response.text)
+
+        # 5. Build Staging Payload
+        payload = {
+            "document_type": doc_class,
+            "entity_name": extracted_data.get("entity_name"),
+            "document_date": extracted_data.get("document_date") or None,
+            "subtotal": float(extracted_data.get("subtotal") or 0.0),
+            "tax_amount": float(extracted_data.get("tax_amount") or 0.0),
+            "total_amount": float(extracted_data.get("total_amount") or 0.0),
+            "status": "pending"
+        }
+
+        # 6. Push to Supabase `document_staging` table if connected
+        if self.supabase:
+            try:
+                self.supabase.table("document_staging").insert(payload).execute()
+                logger.info(f"Successfully staged [{doc_class.upper()}] document to Supabase.")
+            except Exception as e:
+                logger.error(f"Failed to sync document staging to Supabase: {e}")
+
+        return payload
 
     def run_anomaly_scanner(self, transactions: pd.DataFrame, client_id: Optional[str] = None) -> pd.DataFrame:
         """Return flagged transaction-level exceptions and optionally push to Supabase."""
@@ -104,7 +201,6 @@ class CPAAutomationEngine:
             if bool(row["is_1099_vendor"]) and amount >= self.config.nec_vendor_threshold and not bool(row["w9_on_file"]):
                 flags.append("Missing W-9 for vendor at/over configured 1099-NEC review threshold")
 
-            # Safely handle non-integer DataFrame indices
             source_idx = int(idx) if isinstance(idx, (int, pd.Int64Dtype)) else str(idx)
 
             for flag in flags:
@@ -121,7 +217,6 @@ class CPAAutomationEngine:
 
         results_df = pd.DataFrame(findings, columns=["source_index", "date", "vendor", "amount", "flag"])
 
-        # Push findings to Supabase if connected
         if findings and client_id and self.supabase:
             try:
                 self.supabase.table("audit_flags").upsert(findings).execute()
