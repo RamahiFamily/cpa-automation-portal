@@ -26,9 +26,6 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# ==============================================================================
-# CONFIGURATION BLOCK
-# ==============================================================================
 @dataclass(frozen=True)
 class EngineConfig:
     sales_tax_rate: float = 0.0635          # Connecticut State Sales Tax Rate
@@ -36,7 +33,6 @@ class EngineConfig:
     capitalization_threshold: float = 2500.0 # Section 179 / Fixed Asset threshold
     nec_vendor_threshold: float = 600.0     # 1099-NEC review threshold
     personal_merchants: tuple[str, ...] = ("stew leonard's", "netflix")
-# ==============================================================================
 
 
 class CPAAutomationEngine:
@@ -47,15 +43,10 @@ class CPAAutomationEngine:
         self.supabase: Optional[Client] = None
         self.gemini_client = None
 
-        # ======================================================================
-        # SECURE CREDENTIAL LOADING VIA ENVIRONMENT VARIABLES
-        # ======================================================================
-        GEMINI_API_KEY = os.getenv("AQ.Ab8RN6LosNl-WNs4iY1eOUmejqxtTBBODwzY8Qyee9qXhNsWWw")
+        GEMINI_API_KEY = os.getenv("AQ.Ab8RN6I4zOLeQazmkuXneEPx0WRGcmdTVVRoHEy6pZtKxvarwg")
         SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co")
         SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
-        # ======================================================================
 
-        # Initialize Gemini Client
         if HAS_GENAI and GEMINI_API_KEY:
             try:
                 self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -63,7 +54,6 @@ class CPAAutomationEngine:
             except Exception as e:
                 logger.warning(f"Failed to initialize Gemini client: {e}")
 
-        # Initialize Supabase Client
         if HAS_SUPABASE and SUPABASE_URL and SUPABASE_KEY:
             try:
                 self.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -91,17 +81,15 @@ class CPAAutomationEngine:
 
     def process_shoebox_document(self, image_file_path: str) -> Dict[str, Any]:
         """
-        Classifies and extracts summary data from shoebox documents (Receipts, Invoices, Bills, Statements)
+        Classifies and extracts summary data from shoebox documents (Receipts, Invoices, Bills, Bank Statements)
         using Gemini 3.8 Flash, and automatically stages them into Supabase.
         """
         if not self.gemini_client:
             raise RuntimeError("Gemini AI client is not initialized. Provide a valid GEMINI_API_KEY environment variable.")
 
-        # 1. Load and orient image
         img = Image.open(image_file_path)
         img = ImageOps.exif_transpose(img)
 
-        # 2. Document Classification Prompt
         classifier_prompt = """
         Classify this document image into EXACTLY ONE of the following categories:
         - "receipt" (Retail or store purchase receipt)
@@ -118,7 +106,6 @@ class CPAAutomationEngine:
         )
         doc_class = json.loads(class_response.text).get("document_type", "receipt")
 
-        # 3. Dynamic Extraction Schema Selection
         extraction_prompt = """
         Extract summary details from this document:
         - entity_name (Merchant, Vendor, or Bank Name)
@@ -130,7 +117,6 @@ class CPAAutomationEngine:
         {"entity_name": "...", "document_date": "YYYY-MM-DD", "subtotal": 0.00, "tax_amount": 0.00, "total_amount": 0.00}
         """
 
-        # 4. Call Gemini 3.8 Flash with auto-retry logic
         response = None
         for attempt in range(3):
             try:
@@ -146,10 +132,9 @@ class CPAAutomationEngine:
 
         extracted_data = json.loads(response.text)
 
-        # 5. Build Staging Payload
         payload = {
             "document_type": doc_class,
-            "entity_name": extracted_data.get("entity_name"),
+            "entity_name": extracted_data.get("entity_name") or "Unknown Merchant",
             "document_date": extracted_data.get("document_date") or None,
             "subtotal": float(extracted_data.get("subtotal") or 0.0),
             "tax_amount": float(extracted_data.get("tax_amount") or 0.0),
@@ -157,7 +142,6 @@ class CPAAutomationEngine:
             "status": "pending"
         }
 
-        # 6. Push to Supabase `document_staging` table if connected
         if self.supabase:
             try:
                 self.supabase.table("document_staging").insert(payload).execute()
@@ -168,7 +152,6 @@ class CPAAutomationEngine:
         return payload
 
     def run_anomaly_scanner(self, transactions: pd.DataFrame, client_id: Optional[str] = None) -> pd.DataFrame:
-        """Return flagged transaction-level exceptions and optionally push to Supabase."""
         if not isinstance(transactions, pd.DataFrame):
             raise TypeError("transactions must be a pandas DataFrame")
         self._require_columns(transactions, ("date", "vendor", "amount", "category"))
@@ -233,7 +216,6 @@ class CPAAutomationEngine:
         business_use_taxable_purchases: float = 0.0,
         business_use_tax_rate: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """Calculate configurable CT sales, meals, and business-use tax estimates."""
         retail = self._money(gross_retail, "gross_retail")
         meals = self._money(gross_meals, "gross_meals")
         use_base = self._money(business_use_taxable_purchases, "business_use_taxable_purchases")
@@ -256,7 +238,6 @@ class CPAAutomationEngine:
         ledger: pd.DataFrame,
         irs_line_map: Optional[Mapping[str, str]] = None,
     ) -> pd.DataFrame:
-        """Aggregate ledger balances by account/category and map them to supplied IRS lines."""
         if not isinstance(ledger, pd.DataFrame):
             raise TypeError("ledger must be a pandas DataFrame")
         self._require_columns(ledger, ("account", "category", "debit", "credit"))
@@ -271,14 +252,3 @@ class CPAAutomationEngine:
         mapping = dict(irs_line_map or {})
         grouped["irs_form_line"] = grouped["category"].map(mapping).fillna("Unmapped - review required")
         return grouped[["account", "category", "debit", "credit", "balance", "irs_form_line"]]
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    engine = CPAAutomationEngine()
-    sample = pd.DataFrame([
-        {"date": "2026-10-01", "vendor": "Netflix", "amount": 25.0, "category": "Subscriptions", "business_purpose": ""},
-        {"date": "2026-10-02", "vendor": "Equipment Co", "amount": 3200.0, "category": "Equipment", "is_fixed_asset": True},
-    ])
-    print(engine.run_anomaly_scanner(sample).to_string(index=False))
-    print(engine.calculate_ct_os114(10_000, 5_000))
