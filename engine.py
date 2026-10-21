@@ -46,7 +46,7 @@ class CPAAutomationEngine:
 
         GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co")
-        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnenlta2ZydGRxaXp5dGFkeWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDQ2OTUsImV4cCI6MjEwNzcyMDY5NX0.4oB5zoF8SBVlN_4p3bATAt78c41z39KeqJaPyFt1_l0")
+        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("**")
 
         if HAS_GENAI and GEMINI_API_KEY:
             try:
