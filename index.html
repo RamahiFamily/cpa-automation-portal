@@ -176,7 +176,7 @@
                         <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
                             <div class="border-b border-slate-200 pb-3">
                                 <h2 class="text-lg font-bold text-slate-800">📤 AI Shoebox Ingestion</h2>
-                                <p class="text-xs text-slate-500">Upload receipts, bills, invoices, or statements. Dynamic extraction populates the Supabase staging queue.</p>
+                                <p class="text-xs text-slate-500">Upload receipts, bills, invoices, or statements. Gemini 3.8 Flash extracts fields automatically.</p>
                             </div>
                             <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:border-indigo-500 transition-colors cursor-pointer relative">
                                 <input type="file" id="shoeboxFileInput" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleShoeboxUpload(this.files)">
@@ -651,7 +651,7 @@
         }
 
         // =========================================================================
-        // AI SHOEBOX & STAGING QUEUE FUNCTIONS (DYNAMIC FILE EXTRACTION)
+        // AI SHOEBOX & STAGING QUEUE FUNCTIONS (REAL GEMINI AI EXTRACTION)
         // =========================================================================
         async function loadStagingQueue() {
             const tbody = document.getElementById('stagingTableBody');
@@ -707,40 +707,32 @@
             const statusDiv = document.getElementById('shoeboxUploadStatus');
             if (!files || files.length === 0) return;
 
-            statusDiv.innerHTML = `<span class="text-amber-600 font-semibold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting and staging ${files.length} document(s)...</span>`;
+            statusDiv.innerHTML = `<span class="text-amber-600 font-semibold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Gemini 3.8 Flash analyzing ${files.length} document(s)...</span>`;
 
             try {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    
-                    const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-                    const hashVal = Array.from(file.name).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                    const dynamicTotal = ((hashVal % 150) + 18.50).toFixed(2);
+                    const formData = new FormData();
+                    formData.append('file', file);
 
-                    const payload = {
-                        document_type: file.name.toLowerCase().includes('invoice') ? 'invoice' : (file.name.toLowerCase().includes('bill') ? 'bill' : 'receipt'),
-                        entity_name: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
-                        document_date: new Date().toISOString().split('T')[0],
-                        subtotal: (parseFloat(dynamicTotal) * 0.9).toFixed(2),
-                        tax_amount: (parseFloat(dynamicTotal) * 0.1).toFixed(2),
-                        total_amount: parseFloat(dynamicTotal),
-                        status: "pending"
-                    };
+                    // Posts the actual image/PDF to your Python backend running engine.py
+                    const response = await fetch('http://localhost:5000/api/upload-shoebox', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                    const { data, error } = await supabaseClient
-                        .from('document_staging')
-                        .insert([payload])
-                        .select();
-
-                    if (error) throw error;
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.error || "AI extraction failed");
+                    }
                 }
 
-                statusDiv.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check mr-1"></i> Successfully extracted and staged ${files.length} document(s) into Supabase!</span>`;
+                statusDiv.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check mr-1"></i> Successfully read via Gemini & staged into Supabase!</span>`;
                 loadStagingQueue();
 
             } catch (err) {
-                console.error("Upload error:", err);
-                statusDiv.innerHTML = `<span class="text-rose-600 font-semibold">❌ Staging failed: ${err.message}</span>`;
+                console.error("AI Upload error:", err);
+                statusDiv.innerHTML = `<span class="text-rose-600 font-semibold">❌ AI Extraction failed: ${err.message} (Ensure local python server is running)</span>`;
             }
         }
 
