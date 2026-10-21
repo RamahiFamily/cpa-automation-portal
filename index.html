@@ -703,7 +703,7 @@
             }
         }
 
-        async function handleShoeboxUpload(files) {
+       async function handleShoeboxUpload(files) {
             const statusDiv = document.getElementById('shoeboxUploadStatus');
             if (!files || files.length === 0) return;
 
@@ -712,19 +712,37 @@
             try {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    // Posts the actual image/PDF to your Python backend running engine.py
-                    const response = await fetch('http://localhost:5000/api/upload-shoebox', {
-                        method: 'POST',
-                        body: formData
+                    
+                    // Convert file to Base64 for Supabase Edge Function / Gemini processing
+                    const base64Data = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(file);
                     });
 
-                    const result = await response.json();
-                    if (!result.success) {
-                        throw new Error(result.error || "AI extraction failed");
-                    }
+                    // Call Supabase Edge Function securely
+                    const { data: aiResult, error: fnError } = await supabaseClient.functions.invoke('extract-shoebox', {
+                        body: { imageBase64: base64Data, fileName: file.name }
+                    });
+
+                    if (fnError) throw fnError;
+
+                    // Insert real AI-extracted data into Supabase document_staging table
+                    const payload = {
+                        document_type: aiResult.data.document_type || 'receipt',
+                        entity_name: aiResult.data.entity_name || file.name.replace(/\.[^/.]+$/, ""),
+                        document_date: aiResult.data.document_date || new Date().toISOString().split('T')[0],
+                        subtotal: parseFloat(aiResult.data.subtotal || 0),
+                        tax_amount: parseFloat(aiResult.data.tax_amount || 0),
+                        total_amount: parseFloat(aiResult.data.total_amount || 0),
+                        status: "pending"
+                    };
+
+                    const { error: insertError } = await supabaseClient
+                        .from('document_staging')
+                        .insert([payload]);
+
+                    if (insertError) throw insertError;
                 }
 
                 statusDiv.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check mr-1"></i> Successfully read via Gemini & staged into Supabase!</span>`;
@@ -732,10 +750,9 @@
 
             } catch (err) {
                 console.error("AI Upload error:", err);
-                statusDiv.innerHTML = `<span class="text-rose-600 font-semibold">❌ AI Extraction failed: ${err.message} (Ensure local python server is running)</span>`;
+                statusDiv.innerHTML = `<span class="text-rose-600 font-semibold">❌ AI Extraction failed: ${err.message}</span>`;
             }
         }
-
         async function approveAndAssign(itemId) {
             const select = document.getElementById(`client_select_${itemId}`);
             const clientId = select.value;
