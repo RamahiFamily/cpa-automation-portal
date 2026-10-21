@@ -54,7 +54,7 @@
             </div>
             <div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-1">
                 <p class="font-semibold text-slate-300">Realm ID: 4620816365363065324</p>
-                <p id="conn-status-badge" class="text-emerald-400 font-semibold">● Secure Live Sync</p>
+                <p class="text-emerald-400 font-semibold">● Secure Live Sync</p>
             </div>
         </aside>
 
@@ -78,15 +78,16 @@
                 </div>
             </header>
 
-            <!-- Collapsible Local API Key Vault (Prevents GitHub Secret Exposure) -->
+            <!-- Secure Local Key Vault Bar -->
             <div id="apiKeyVaultBar" class="bg-slate-900 text-white px-8 py-4 border-b border-slate-800 hidden">
                 <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-end gap-4">
                     <div class="flex-1 w-full">
-                        <label class="block text-[10px] font-bold text-indigo-300 uppercase mb-1">Supabase Anon Key (Saved in Browser Only)</label>
-                        <input type="password" id="vaultSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+                        <label class="block text-[10px] font-bold text-indigo-300 uppercase mb-1">Supabase URL & Anon Key</label>
+                        <input type="text" id="vaultSupabaseUrl" placeholder="https://xyz.supabase.co" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white mb-1">
+                        <input type="password" id="vaultSupabaseKey" placeholder="Supabase Anon Key..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
                     </div>
                     <div class="flex-1 w-full">
-                        <label class="block text-[10px] font-bold text-emerald-300 uppercase mb-1">Google Gemini API Key (For Real Receipt/Bill/Statement OCR)</label>
+                        <label class="block text-[10px] font-bold text-emerald-300 uppercase mb-1">Google Gemini API Key (Browser Vision OCR)</label>
                         <input type="password" id="vaultGeminiKey" placeholder="AIzaSy..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
                     </div>
                     <div class="flex space-x-2">
@@ -99,7 +100,7 @@
                     </div>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-2 max-w-6xl mx-auto">
-                    <i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Keys are stored strictly in your browser's <code class="text-slate-200">localStorage</code>. They are never committed to GitHub.
+                    <i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Keys are stored exclusively in your browser's <code class="text-slate-200">localStorage</code> and never committed to GitHub.
                 </p>
             </div>
 
@@ -212,7 +213,7 @@
                                 <div class="space-y-2">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-600"></i>
                                     <p class="text-xs font-bold text-slate-700">Click or drag shoebox files here</p>
-                                    <p class="text-[10px] text-slate-400">Receipts, Vendor Bills, Invoices, Bank Statements (PNG, JPG, WEBP, PDF)</p>
+                                    <p class="text-[10px] text-slate-400">Receipts, Bills, Invoices, Statements (PNG, JPG, WEBP, PDF)</p>
                                 </div>
                             </div>
                             <div id="shoeboxUploadStatus" class="text-xs font-medium space-y-1"></div>
@@ -620,9 +621,9 @@
 
     <!-- APPLICATION JAVASCRIPT -->
     <script>
-        const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('CPA_SUPABASE_URL') || "https://vgzymkfrtdqizytadyjf.supabase.co";
-        let SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || localStorage.getItem('**') || "";
-        let GEMINI_API_KEY = window.GEMINI_API_KEY || localStorage.getItem('CPA_GEMINI_API_KEY') || "";
+        const SUPABASE_URL = localStorage.getItem('CPA_SUPABASE_URL') || "https://vgzymkfrtdqizytadyjf.supabase.co";
+        let SUPABASE_ANON_KEY = localStorage.getItem('CPA_SUPABASE_ANON_KEY') || "";
+        let GEMINI_API_KEY = localStorage.getItem('CPA_GEMINI_API_KEY') || "";
 
         let supabaseClient = null;
         function createOrUpdateSupabaseClient() {
@@ -642,13 +643,16 @@
         function toggleKeyModal() {
             const bar = document.getElementById('apiKeyVaultBar');
             bar.classList.toggle('hidden');
+            document.getElementById('vaultSupabaseUrl').value = SUPABASE_URL;
             document.getElementById('vaultSupabaseKey').value = SUPABASE_ANON_KEY;
             document.getElementById('vaultGeminiKey').value = GEMINI_API_KEY;
         }
 
         function saveLocalKeys() {
+            const sbUrl = document.getElementById('vaultSupabaseUrl').value.trim();
             const sbKey = document.getElementById('vaultSupabaseKey').value.trim();
             const gmKey = document.getElementById('vaultGeminiKey').value.trim();
+            if (sbUrl) localStorage.setItem('CPA_SUPABASE_URL', sbUrl);
             if (sbKey) {
                 localStorage.setItem('CPA_SUPABASE_ANON_KEY', sbKey);
                 SUPABASE_ANON_KEY = sbKey;
@@ -660,12 +664,13 @@
             createOrUpdateSupabaseClient();
             document.getElementById('apiKeyVaultBar').classList.add('hidden');
             initApp();
-            alert("API Keys saved to your browser's local storage! Reloading data from Supabase.");
+            alert("API Keys saved to browser storage! Reloading data from Supabase.");
         }
 
         async function initApp() {
             if (!SUPABASE_ANON_KEY) {
                 document.getElementById('apiKeyVaultBar').classList.remove('hidden');
+                return;
             }
             try {
                 const [clientsRes, txRes, masterRes, reportsRes] = await Promise.all([
@@ -819,7 +824,6 @@ Return strict JSON with keys: document_type, entity_name, document_date, subtota
                 }
             };
 
-            // Try official Gemini Flash models in order so it never fails on model naming
             const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
             let lastError = null;
 
@@ -838,10 +842,7 @@ Return strict JSON with keys: document_type, entity_name, document_date, subtota
                 } else {
                     const errBody = await response.json().catch(() => ({}));
                     lastError = errBody?.error?.message || `HTTP ${response.status}`;
-                    // If key is invalid, stop immediately and alert user
-                    if (response.status === 400 || response.status === 403) {
-                        break;
-                    }
+                    if (response.status === 400 || response.status === 403) break;
                 }
             }
             throw new Error(`Gemini API Error: ${lastError}`);
@@ -900,7 +901,6 @@ Return strict JSON with keys: document_type, entity_name, document_date, subtota
             }
 
             try {
-                // 1. Fetch staged item details
                 const { data: stagedRows, error: fetchErr } = await supabaseClient
                     .from('document_staging')
                     .select('*')
@@ -910,7 +910,6 @@ Return strict JSON with keys: document_type, entity_name, document_date, subtota
                 if (fetchErr) throw fetchErr;
                 const item = stagedRows?.[0];
 
-                // 2. Mark staged document as approved
                 const { error: updateErr } = await supabaseClient
                     .from('document_staging')
                     .update({ client_id: clientId, status: 'approved' })
@@ -918,7 +917,6 @@ Return strict JSON with keys: document_type, entity_name, document_date, subtota
 
                 if (updateErr) throw updateErr;
 
-                // 3. Insert into live `transactions` table so Client Ledger, P&L, and Tax Return update immediately
                 if (item) {
                     const txCategory = item.document_type === 'invoice' ? 'Revenue' : (item.document_type === 'bank_statement' ? 'Banking Deposit' : 'Expense');
                     const txPayload = {
