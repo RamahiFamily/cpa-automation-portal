@@ -13,7 +13,7 @@ from PIL import Image, ImageOps
 try:
     from google import genai
     from google.genai import types
-    from google.genai.errors import APIError, ServerError
+    from google.genai.errors import ServerError
     HAS_GENAI = True
 except ImportError:
     HAS_GENAI = False
@@ -45,8 +45,8 @@ class CPAAutomationEngine:
         self.gemini_client = None
 
         GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-        SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vgzymkfrtdqizytadyjf.supabase.co")
-        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("**")
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
 
         if HAS_GENAI and GEMINI_API_KEY:
             try:
@@ -81,7 +81,6 @@ class CPAAutomationEngine:
         return number
 
     def _call_gemini_json(self, contents: list[Any]) -> Dict[str, Any]:
-        """Call Gemini Flash with automatic model fallback and strict JSON output."""
         if not self.gemini_client:
             raise RuntimeError("Gemini AI client is not initialized. Set the GEMINI_API_KEY environment variable.")
 
@@ -105,10 +104,6 @@ class CPAAutomationEngine:
         raise RuntimeError(f"Gemini extraction failed: {last_err}")
 
     def process_shoebox_document(self, image_file_path: str) -> Dict[str, Any]:
-        """
-        Classifies and extracts summary data from shoebox documents (Receipts, Invoices, Bills, Bank Statements)
-        using Gemini Flash, and automatically stages them into Supabase.
-        """
         img = Image.open(image_file_path)
         img = ImageOps.exif_transpose(img)
 
